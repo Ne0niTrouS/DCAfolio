@@ -34,3 +34,6 @@ yarn-error.log*
 .idea/
 .DS_Store
 Thumbs.db
+
+# Editor/agent tooling config, not part of the project.
+.claude/

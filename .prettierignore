@@ -4,3 +4,4 @@ coverage
 supabase/.temp
 *.md
 supabase/functions
+.claude

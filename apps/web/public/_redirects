@@ -1,0 +1,3 @@
+# Cloudflare Pages SPA fallback. Client-side routing means /history and
+# /stocks/:symbol must serve index.html; without this they 404 on reload.
+/*    /index.html   200
