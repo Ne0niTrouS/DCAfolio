@@ -30,7 +30,7 @@ npm run build     # when the phase touched apps/web
 | 7 | Market Data | ✅ Complete (mock provider is the documented default) |
 | 8 | History | ✅ Complete |
 | 9 | Export | ✅ Complete |
-| 10 | Responsive Polish | ⬜ Not started |
+| 10 | Responsive Polish | ✅ Complete |
 | 11 | Quality | ⬜ Not started |
 | 12 | Deployment | ⬜ Not started |
 
@@ -500,6 +500,12 @@ are asserted in tests, but no file has been opened in a spreadsheet application.
 
 **Objective**: a genuinely good mobile-first experience and accessible interactions. Desktop
 tables are never merely shrunk.
+
+**Outcome (verified 2026-08-20)**: 264 tests pass. Initial bundle reduced from 629 kB to 532 kB
+(gzip 185 kB to 159 kB) by lazy-loading the signed-in pages and the XLSX writer.
+**Still unverified**: manual inspection at 375px and 1440px in a real browser — the responsive
+switch is asserted structurally (both table and cards render, both navigations exist), not
+visually.
 
 ### Task 10.1 — Navigation
 - **Files**: `apps/web/src/layouts/{AppShell,Sidebar,MobileNav,TopHeader}.tsx`.
