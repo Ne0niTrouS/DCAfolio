@@ -23,7 +23,7 @@ npm run build     # when the phase touched apps/web
 | 0 | Documentation | ✅ Complete |
 | 1 | Project Foundation | ✅ Complete |
 | 2 | Supabase Foundation | ✅ Complete (schema verified in PGlite; not yet applied to a real project) |
-| 3 | Authentication | ⬜ Not started |
+| 3 | Authentication | ✅ Complete (unverified against a live Supabase project) |
 | 4 | Calculation Engine | ⬜ Not started |
 | 5 | Transaction Management | ⬜ Not started |
 | 6 | Dashboard | ⬜ Not started |
@@ -164,6 +164,12 @@ typecheck/lint/test green.
 ## PHASE 3 — Authentication
 
 **Objective**: working email/password auth with session persistence and protected routes.
+
+**Outcome (verified 2026-08-20)**: 34 web tests pass, covering provider state transitions,
+profile bootstrap, every auth operation, error mapping, both auth forms and route protection for
+all four protected routes. The Supabase client is mocked at the module boundary.
+**Still unverified**: a real sign-in against a live Supabase project, and delivery of the
+password-reset email — both need a provisioned project (Phase 12).
 
 ### Task 3.1 — Supabase client & auth provider
 - **Files**: `apps/web/src/lib/supabase.ts`, `apps/web/src/features/auth/AuthProvider.tsx`,
