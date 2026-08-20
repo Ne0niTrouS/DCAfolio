@@ -1,0 +1,47 @@
+@import 'tailwindcss';
+
+/*
+ * DCAfolio design tokens.
+ * Clean, minimal, trustworthy personal finance — not a trading terminal.
+ * One accent colour, neutral surfaces, tabular numerals for every figure.
+ */
+@theme {
+  --color-surface: oklch(99% 0 0);
+  --color-surface-raised: oklch(100% 0 0);
+  --color-surface-sunken: oklch(96.5% 0.003 250);
+  --color-border-subtle: oklch(91% 0.004 250);
+
+  --color-ink: oklch(23% 0.012 250);
+  --color-ink-muted: oklch(52% 0.012 250);
+
+  --color-accent: oklch(52% 0.14 250);
+  --color-accent-strong: oklch(44% 0.15 250);
+
+  --color-profit: oklch(48% 0.13 155);
+  --color-loss: oklch(52% 0.19 25);
+
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+  }
+
+  body {
+    background-color: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Figures must line up in columns; money is read vertically, not as prose. */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}
