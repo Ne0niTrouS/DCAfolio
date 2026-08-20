@@ -27,7 +27,7 @@ npm run build     # when the phase touched apps/web
 | 4 | Calculation Engine | ✅ Complete |
 | 5 | Transaction Management | ✅ Complete (unverified against a live Supabase project) |
 | 6 | Dashboard | ✅ Complete |
-| 7 | Market Data | ⬜ Not started |
+| 7 | Market Data | ✅ Complete (mock provider is the documented default) |
 | 8 | History | ⬜ Not started |
 | 9 | Export | ⬜ Not started |
 | 10 | Responsive Polish | ⬜ Not started |
@@ -360,6 +360,16 @@ old price look current.
 
 **Objective**: a provider abstraction with a documented mock default, a price cache, staleness
 and market status. **This phase must not block any other phase.**
+
+**Outcome (verified 2026-08-20)**: 219 tests pass. Task 7.3 was completed and recorded in
+[`../specs/market-data-providers.md`](../specs/market-data-providers.md): **no free provider of
+Thai SET quotes could be verified** against the criteria, so `MockMarketDataProvider` is the
+documented V1 default and every mock price is labelled as mock in the UI. **Task 7.4 was
+therefore not implemented** — it is explicitly conditional on a verified provider. The
+`market-data` Edge Function is in place as the only writer of `market_prices`, including the
+provider-failure path that re-publishes the last successful price as stale.
+**Still unverified**: the Edge Function has not been deployed or executed (needs a Supabase
+project — Phase 12).
 
 ### Task 7.1 — Provider interface & registry
 - **Files**: `packages/shared/src/market-data.ts`,
