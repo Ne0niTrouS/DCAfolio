@@ -5,6 +5,7 @@ import { BrowserRouter } from 'react-router-dom';
 
 import { App } from './App';
 import { AuthProvider } from './features/auth/AuthProvider';
+import { LanguageProvider } from './i18n/LanguageProvider';
 import './index.css';
 import { createQueryClient } from './lib/query-client';
 
@@ -18,7 +19,11 @@ createRoot(container).render(
     <QueryClientProvider client={createQueryClient()}>
       <BrowserRouter>
         <AuthProvider>
-          <App />
+          {/* Inside AuthProvider: crossing the sign-in boundary resets the
+              language, so login and the signed-in app both start in Thai. */}
+          <LanguageProvider>
+            <App />
+          </LanguageProvider>
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
