@@ -1,0 +1,147 @@
+import type { Stock, TransactionWithStock } from '@dcafolio/shared';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+const mocks = vi.hoisted(() => ({
+  fetchTransactions: vi.fn(),
+  downloadBlob: vi.fn(),
+  xlsxBlob: vi.fn(async () => new Blob(['xlsx'])),
+}));
+
+vi.mock('@/features/transactions/queries', () => ({
+  fetchTransactions: mocks.fetchTransactions,
+}));
+vi.mock('@/lib/download', () => ({ downloadBlob: mocks.downloadBlob }));
+vi.mock('../xlsx', () => ({ xlsxBlob: mocks.xlsxBlob }));
+
+const { ExportForm } = await import('../ExportForm');
+
+const CPALL: Stock = {
+  id: 'stock-cpall',
+  symbol: 'CPALL',
+  nameTh: 'บริษัท ซีพี ออลล์ จำกัด (มหาชน)',
+  market: 'SET',
+  isActive: true,
+};
+
+const TRANSACTION: TransactionWithStock = {
+  id: 't1',
+  userId: 'user-1',
+  stockId: 'stock-cpall',
+  purchaseDate: '2026-08-09',
+  investedAmount: '12500.00',
+  shares: '200',
+  createdAt: '2026-08-09T10:00:00.000Z',
+  updatedAt: '2026-08-09T10:00:00.000Z',
+  stock: CPALL,
+};
+
+function setup() {
+  render(<ExportForm stocks={[CPALL]} currentYear={2026} />);
+}
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  mocks.fetchTransactions.mockResolvedValue([TRANSACTION]);
+  mocks.xlsxBlob.mockResolvedValue(new Blob(['xlsx']));
+});
+
+describe('ExportForm', () => {
+  it('offers the four scopes and both formats', async () => {
+    setup();
+
+    expect(screen.getByLabelText('Stock')).toBeInTheDocument();
+    expect(screen.getByLabelText('Period')).toBeInTheDocument();
+    expect(screen.getByLabelText('Format')).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'All Stocks' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'XLSX' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'CSV' })).toBeInTheDocument();
+  });
+
+  it('asks for a month only when the period is monthly', async () => {
+    setup();
+
+    expect(screen.queryByLabelText('Year')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Month')).not.toBeInTheDocument();
+
+    await userEvent.selectOptions(screen.getByLabelText('Period'), 'yearly');
+    expect(screen.getByLabelText('Year')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Month')).not.toBeInTheDocument();
+
+    await userEvent.selectOptions(screen.getByLabelText('Period'), 'monthly');
+    expect(screen.getByLabelText('Month')).toBeInTheDocument();
+  });
+
+  it('exports all stocks over all time as XLSX by default', async () => {
+    setup();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Export' }));
+
+    await waitFor(() => expect(mocks.downloadBlob).toHaveBeenCalled());
+    expect(mocks.fetchTransactions).toHaveBeenCalledWith({
+      stockId: undefined,
+      from: undefined,
+      to: undefined,
+    });
+    expect(mocks.xlsxBlob).toHaveBeenCalledWith([TRANSACTION]);
+    expect(mocks.downloadBlob.mock.calls[0]?.[1]).toBe('dcafolio_all_all-time.xlsx');
+  });
+
+  it('exports one stock for one month as CSV', async () => {
+    setup();
+
+    await userEvent.selectOptions(screen.getByLabelText('Stock'), 'stock-cpall');
+    await userEvent.selectOptions(screen.getByLabelText('Period'), 'monthly');
+    await userEvent.selectOptions(screen.getByLabelText('Month'), '8');
+    await userEvent.selectOptions(screen.getByLabelText('Format'), 'csv');
+    await userEvent.click(screen.getByRole('button', { name: 'Export' }));
+
+    await waitFor(() => expect(mocks.downloadBlob).toHaveBeenCalled());
+    expect(mocks.fetchTransactions).toHaveBeenCalledWith({
+      stockId: 'stock-cpall',
+      from: '2026-08-01',
+      to: '2026-08-31',
+    });
+    expect(mocks.xlsxBlob).not.toHaveBeenCalled();
+    expect(mocks.downloadBlob.mock.calls[0]?.[1]).toBe('dcafolio_CPALL_2026-08.csv');
+  });
+
+  it('exports a whole year', async () => {
+    setup();
+
+    await userEvent.selectOptions(screen.getByLabelText('Period'), 'yearly');
+    await userEvent.click(screen.getByRole('button', { name: 'Export' }));
+
+    await waitFor(() => expect(mocks.downloadBlob).toHaveBeenCalled());
+    expect(mocks.fetchTransactions).toHaveBeenCalledWith({
+      stockId: undefined,
+      from: '2026-01-01',
+      to: '2026-12-31',
+    });
+  });
+
+  it('says so instead of producing an empty file', async () => {
+    mocks.fetchTransactions.mockResolvedValue([]);
+    setup();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Export' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'No transactions match this selection.',
+    );
+    expect(mocks.downloadBlob).not.toHaveBeenCalled();
+  });
+
+  it('reports a failed export instead of failing silently', async () => {
+    mocks.fetchTransactions.mockRejectedValue(new Error('permission denied for table'));
+    setup();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Export' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'You do not have access to that record.',
+    );
+    expect(mocks.downloadBlob).not.toHaveBeenCalled();
+  });
+});

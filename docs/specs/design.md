@@ -585,10 +585,16 @@ combine (e.g. CPALL + August 2026).
 Thai text and `฿` open correctly in Excel. Values are raw numbers (no thousands separators) so
 the file re-imports cleanly.
 
-**XLSX** — generated client-side with the open-source `xlsx` library:
+**XLSX** — generated client-side with the open-source **`write-excel-file`** library (MIT).
+The `xlsx` (SheetJS) package originally named here was rejected: its npm build is abandoned at
+0.18.5 with two unfixed high-severity advisories (prototype pollution, ReDoS).
+`write-excel-file` is maintained, browser-first and write-only, which is all this feature needs.
 
 - *Sheet 1 — Transactions*: Date, Stock, Invested Amount, Shares, Price / Share.
 - *Sheet 2 — Summary*: Total Invested, Total Shares, Average Cost, Transaction Count.
+
+Money and share counts are written as numbers, not strings, so the workbook is usable for
+arithmetic the moment it opens.
 
 File naming: `dcafolio_<scope>_<range>.<ext>`, e.g. `dcafolio_CPALL_2026-08.xlsx`,
 `dcafolio_all_all-time.csv`.
