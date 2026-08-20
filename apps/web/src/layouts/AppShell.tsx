@@ -42,6 +42,14 @@ export function AppShell() {
 
   return (
     <div className="min-h-dvh md:flex">
+      {/* Lets a keyboard user reach the page without tabbing the whole nav. */}
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-surface-raised focus:px-4 focus:py-2 focus:text-ink"
+      >
+        Skip to content
+      </a>
+
       <header className="flex items-center justify-between border-b border-border-subtle px-4 py-3 md:hidden">
         <span className="text-lg font-semibold text-ink">{APP_NAME}</span>
         <Button variant="secondary" onClick={handleSignOut} className="px-3">
@@ -67,7 +75,7 @@ export function AppShell() {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <main className="flex-1 px-4 pb-24 pt-4 md:px-8 md:pb-8">
+        <main id="main" tabIndex={-1} className="flex-1 px-4 pb-24 pt-4 md:px-8 md:pb-8">
           {signOutError ? <p role="alert">{signOutError}</p> : null}
           <Outlet />
         </main>

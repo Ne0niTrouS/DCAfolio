@@ -1,5 +1,5 @@
 import type { TransactionWithStock } from '@dcafolio/shared';
-import writeXlsxFile, { type Sheet, type SheetData } from 'write-excel-file/browser';
+import type { Sheet, SheetData } from 'write-excel-file/browser';
 
 import { EXPORT_COLUMNS, summarise, toExportRows } from './rows';
 
@@ -74,5 +74,8 @@ export function buildWorkbook(transactions: TransactionWithStock[]): BrowserShee
 }
 
 export async function xlsxBlob(transactions: TransactionWithStock[]): Promise<Blob> {
+  // Loaded on demand: the writer is the single largest dependency in the app,
+  // and someone who never exports should never download it.
+  const { default: writeXlsxFile } = await import('write-excel-file/browser');
   return writeXlsxFile(buildWorkbook(transactions)).toBlob();
 }

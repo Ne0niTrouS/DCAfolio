@@ -14,5 +14,11 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
+    // Rolldown emits a single chunk by default. Splitting keeps the export
+    // writer — the largest dependency — out of the initial download for
+    // someone who never exports.
+    rolldownOptions: {
+      output: { codeSplitting: true },
+    },
   },
 });
