@@ -90,8 +90,11 @@ TypeScript is pinned to 5.9 because `typescript-eslint` does not yet support 6+.
 ```bash
 npm install
 cp .env.example .env    # then fill in the two Supabase values
-npm run dev
+npm run dev             # http://localhost:5173
 ```
+
+`.env` belongs at the repository root, next to `.env.example` — `vite.config.ts` points
+`envDir` there.
 
 The app **fails loudly at startup** if `VITE_SUPABASE_URL` or `VITE_SUPABASE_ANON_KEY` is
 missing, rather than silently producing a client that 401s on every request.
