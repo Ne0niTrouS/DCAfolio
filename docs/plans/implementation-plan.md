@@ -31,7 +31,7 @@ npm run build     # when the phase touched apps/web
 | 8 | History | ✅ Complete |
 | 9 | Export | ✅ Complete |
 | 10 | Responsive Polish | ✅ Complete |
-| 11 | Quality | ⬜ Not started |
+| 11 | Quality | ✅ Complete |
 | 12 | Deployment | ⬜ Not started |
 
 ---
@@ -536,6 +536,14 @@ visually.
 ## PHASE 11 — Quality
 
 **Objective**: close test gaps, review security, and make every gate green.
+
+**Outcome (verified 2026-08-20)**: 273 tests pass across 30 files. Coverage: statements 92.53%,
+branches 89.26%, functions 92.75%, lines 93.84%; `packages/calculation` remains at 100% of
+statements, lines and functions. `npm audit` reports 0 vulnerabilities with and without dev
+dependencies. The security review is recorded in
+[`../specs/security-review.md`](../specs/security-review.md): RLS covers all four tables per
+command, cross-user access is blocked by test, no `user_id` is ever client-supplied, and the
+built bundle contains no secret-shaped strings.
 
 ### Task 11.1 — Coverage review
 - **Files**: test files across all workspaces.
