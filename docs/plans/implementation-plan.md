@@ -25,7 +25,7 @@ npm run build     # when the phase touched apps/web
 | 2 | Supabase Foundation | ✅ Complete (schema verified in PGlite; not yet applied to a real project) |
 | 3 | Authentication | ✅ Complete (unverified against a live Supabase project) |
 | 4 | Calculation Engine | ✅ Complete |
-| 5 | Transaction Management | ⬜ Not started |
+| 5 | Transaction Management | ✅ Complete (unverified against a live Supabase project) |
 | 6 | Dashboard | ⬜ Not started |
 | 7 | Market Data | ⬜ Not started |
 | 8 | History | ⬜ Not started |
@@ -264,6 +264,11 @@ lint ✅ · test ✅.
 
 **Objective**: full CRUD over transactions with validation, confirmation and automatic
 recalculation.
+
+**Outcome (verified 2026-08-20)**: 184 tests pass across all four projects. Transaction queries
+cast `invested_amount` and `shares` to text because PostgREST serialises `numeric` as a JSON
+number, which would silently round a large amount. Mutations never send a `user_id`.
+**Still unverified**: CRUD against a live Supabase project (Phase 12).
 
 ### Task 5.1 — Domain types and mapping
 - **Files**: `packages/shared/src/types.ts`, `apps/web/src/features/transactions/mappers.ts`.
