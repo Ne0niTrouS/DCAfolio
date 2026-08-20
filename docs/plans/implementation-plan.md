@@ -34,6 +34,7 @@ npm run build     # when the phase touched apps/web
 | 11 | Quality | ✅ Complete |
 | 12 | Deployment | 🟡 Documented, not executed (needs owner credentials) |
 | 13 | UI Redesign & Localization | ✅ Complete (browser-verified signed out; signed-in screens covered by tests only) |
+| 14 | Mockup Alignment | ✅ Complete (same verification limits as Phase 13) |
 
 ---
 
@@ -680,3 +681,45 @@ available in Thai and English.
 `feat: add Thai and English UI localization` ·
 `feat: restyle DCAfolio as a dark-navigation fintech UI` ·
 `test: cover the language default, switching and both dictionaries`.
+
+---
+
+## PHASE 14 — Mockup Alignment
+
+**Objective**: match the supplied login and dashboard mockups without inventing data.
+
+### Task 14.1 — Brand surface and shell
+- **Files**: `apps/web/src/index.css`, `components/{AuthBackdrop,Brand,icons,TextField,Alert,Button,Panel}.tsx`,
+  `components/LanguageSelector.tsx`, `lib/use-dismiss.ts`, `layouts/AppShell.tsx`, the four
+  signed-out pages.
+- **Details**: near-black brand surface with soft scenery behind a dark glass card; ringed brand
+  mark and two-tone wordmark; icon-prefixed fields with screen-reader-only labels; line icons on
+  every nav item; a collapsible sidebar; an account menu carrying the address and Logout.
+- **Tests**: `layouts/__tests__/AppShell.test.tsx` gains sidebar-collapse and account-menu cases.
+- **Verification**: typecheck, lint, tests, build; login checked in the browser at 1280px and
+  375px with no horizontal scroll and no console errors.
+
+### Task 14.2 — Dashboard panels
+- **Files**: `features/portfolio/{DonutChart,InvestedChart,SummaryCard,PositionList,RecentTransactions,KpiCards}.tsx`,
+  `features/portfolio/{invested-series,donut-colors}.ts`, `pages/DashboardPage.tsx`.
+- **Details**: allocation ring with a linked legend and a totals row; cumulative-invested area
+  chart; recent purchases as a table with the symbol as a badge; a counts-only summary. Both
+  charts are hand-drawn SVG — no charting dependency.
+- **Tests**: `features/portfolio/__tests__/invested-series.test.ts` covers ordering, same-day
+  merging, the empty case and decimal accumulation.
+- **Verification**: typecheck, lint, 292 tests, build.
+
+**Scope note — three things in the mockup are deliberately absent**, because the data behind them
+does not exist and rendering them would break the honesty rules in `design.md` §12:
+
+| Not built | Reason |
+| --- | --- |
+| Notification bell | Notifications are out of V1 scope. A bell that never rings is a lie. |
+| Cash Balance | DCAfolio records purchases, not a cash account. |
+| Date-range picker and "vs all time" deltas | A portfolio position is all-time by definition; a date-filtered portfolio value would mislead. History already filters by date, where it means something. |
+
+The "Plan your future / Learn more" promo card is also absent: it has no destination.
+
+**Expected result**: the mockup's visual language across every screen, with no invented figure.
+**Commits**: `feat: rework the shell and signed-out screens to the new mockups` ·
+`feat: rebuild the dashboard around allocation and invested-over-time`.

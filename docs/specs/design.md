@@ -139,22 +139,31 @@ child route or a redirect to `/login`.
 
 ### 2.4 Login screen
 
-A white card centred on the dark brand surface, with the language selector above it.
+A dark glass card centred on the near-black brand surface, with the language selector above it.
 
 ```
                                      [ ไทย ▾ ]
   ┌────────────────────────────────────────────┐
+  │                   ( ↗ )                    │
   │                 DCAfolio                   │
   │          ติดตามพอร์ตหุ้นส่วนตัว                  │
   │                                            │
-  │  อีเมล      [                        ]      │
-  │  รหัสผ่าน    [                        ]      │
+  │   ✉  [ อีเมล                          ]     │
+  │   🔒 [ รหัสผ่าน                        ]     │
   │                                            │
   │           [      เข้าสู่ระบบ      ]           │
   └────────────────────────────────────────────┘
 
                 © NeOniTrouS
 ```
+
+The mark is a rising trend line inside a ring; "DCA" is white and "folio" green, but the
+accessible name stays the single word. The field labels are present and screen-reader only —
+the placeholder carries the same words on screen.
+
+Behind the card sit two soft glows, two large rounded panels, two thin diagonal streaks and a
+faint dotted grid. All of it is `aria-hidden` and `pointer-events-none`; it exists to give the
+card somewhere to sit.
 
 The card carries nothing else: no social sign-in, no registration link, no marketing copy, and
 no forgot-password link. `/forgot-password` remains a working public route, reachable directly
@@ -385,30 +394,51 @@ Portfolio Value      Total Invested      Profit/Loss        Return %       DCA/m
 Signs are always explicit (`+` / `−`). Colour is a secondary cue only; the sign and, where
 useful, a "Profit"/"Loss" label carry the meaning for colour-blind readers and greyscale.
 
+Each card carries an icon tile, an uppercase label and the figure. A note appears only when
+there is something true to say — "some stocks have no price yet" under Portfolio Value.
+
 ### 6.2 Portfolio allocation & positions
 
-A list of positions sorted by current value (falling back to invested amount when unpriced):
+A ring, then a list of positions sorted by current value (falling back to invested amount when
+unpriced), then the total:
 
 ```
-CPALL   35%   +฿4,125   +5.20%
-PTT     25%   +฿1,000   +2.10%
-AOT     20%   −฿1,800   −3.50%
+   ╭───────╮     CPALL              ฿4,375
+  │  35%    │    70 shares          35.00%
+  │ CPALL   │                +฿4,125  +5.20%
+   ╰───────╯     PTT                ฿3,125
+                 ...
+                 ┌──────────────────────────┐
+                 │ Total holdings   ฿12,500 │
+                 │ 3 stocks         100.00% │
+                 └──────────────────────────┘
 ```
 
-Allocation is rendered as a labelled proportional bar per row — no chart library, no animation.
-Each row links to `/stocks/:symbol`.
+Every percentage the ring encodes is printed beside it, and each row links to `/stocks/:symbol`.
+See §11.2 for the chart rules.
 
-### 6.3 Recent transactions
+### 6.3 Invested over time
 
-The five most recent purchases: date · stock · amount · shares. Links to `/history`.
+A cumulative area chart of everything the user has put in, one point per day on which a purchase
+happened. **Not** portfolio value — see §11.2 for why.
 
-### 6.4 Market status strip
+### 6.4 Recent transactions
+
+The five most recent purchases as a table: date · ticker · amount · shares · price per share. The
+symbol is a badge, because it is an identifier rather than prose. Links to `/history`.
+
+### 6.5 Summary
+
+Counts, not money: stocks held, shares held, purchases recorded. Deliberately no cash balance —
+see §11.3.
+
+### 6.6 Market status strip
 
 Market status (`open` / `closed` / `unknown`), provider name, last-updated timestamp, and a
 `Cached` / `Stale` badge when applicable. When the provider is the mock provider, the strip says
 so explicitly.
 
-### 6.5 States
+### 6.7 States
 
 - **Loading** — skeleton KPI cards and list rows.
 - **Empty** — "No investments yet. Add your first stock purchase." + `[ Add Purchase ]`.
@@ -618,8 +648,11 @@ Mobile-first. Tailwind breakpoints; base styles target small screens, `md:`/`lg:
 
 | Viewport | Layout |
 | --- | --- |
-| `< 768px` | top header (title + account menu) · content · fixed bottom navigation (Dashboard · History · Export) · floating "Add Purchase" action |
-| `≥ 768px` | left sidebar navigation · main content · "Add Purchase" button in the page header |
+| `< 768px` | dark top bar (page title · language · account menu) · content · fixed bottom navigation (Dashboard · History · Export) · floating "Add Purchase" action |
+| `≥ 768px` | collapsible dark sidebar (brand · navigation · Add Purchase · Logout) · dark top bar · light main content |
+
+The account menu carries Logout as well as the signed-in address: below `md` the sidebar is not
+rendered, so the menu is the only way out.
 
 Rules:
 
@@ -629,22 +662,59 @@ Rules:
 - Dialogs become full-screen sheets on mobile.
 
 **Design language**: a premium personal-investment surface — clean, minimal, modern, trustworthy;
-personal finance, not a trading terminal. Dark navigation, light content, white cards with soft
-shadows, one green accent, generous spacing, tabular numerals for figures. No excessive charts,
-no decorative animation.
+personal finance, not a trading terminal. Near-black navigation, light content, white cards with
+soft shadows, one green accent, generous spacing, tabular numerals for figures. Two charts and no
+more, no decorative animation.
 
 Design tokens live in `apps/web/src/index.css` under Tailwind's `@theme`:
 
 | Role | Token | Value |
 | --- | --- | --- |
-| Accent / profit | `accent`, `accent-strong`, `accent-light`, `accent-subtle` | `#16A34A` · `#15803D` · `#DCFCE7` · `#F0FDF4` |
-| Navigation | `nav`, `nav-hover`, `nav-active`, `nav-ink`, `nav-ink-muted` | `#111827` · `#1F2937` · `rgb(22 163 74 / .15)` · `#E5E7EB` · `#94A3B8` |
+| Accent / profit | `accent`, `accent-bright`, `accent-strong`, `accent-light`, `accent-subtle` | `#16A34A` · `#22C55E` · `#15803D` · `#DCFCE7` · `#F0FDF4` |
+| Brand surfaces | `nav`, `nav-deep`, `nav-hover`, `nav-card`, `nav-active`, `nav-border` | `#0F141A` · `#090C11` · `#1B222C` · `#161B22` · `rgb(22 163 74 / .15)` · `rgb(255 255 255 / .08)` |
+| Brand text | `nav-ink`, `nav-ink-muted` | `#E5E7EB` · `#94A3B8` |
 | Content | `surface`, `surface-raised`, `surface-sunken`, `border-subtle` | `#F8FAFC` · `#FFFFFF` · `#F1F5F9` · `#E5E7EB` |
 | Text | `ink`, `ink-muted`, `ink-faint` | `#111827` · `#64748B` · `#94A3B8` |
 | Loss | `loss` | `#DC2626` |
 
-Inputs use a `#D1D5DB` border and a green focus ring; the browser's default focus styling is
-never relied on.
+Primary buttons are a top-to-bottom `accent-bright → accent` gradient. Inputs use a `#D1D5DB`
+border on light and `nav-border` on dark, both with a green focus ring; the browser's default
+focus styling is never relied on.
+
+### 11.2 Charts
+
+Two, both hand-drawn SVG — no charting library, so nothing joins the bundle and nothing phones
+home.
+
+| Chart | Component | Source |
+| --- | --- | --- |
+| Allocation ring | `features/portfolio/DonutChart.tsx` | `Position.allocationPercent` |
+| Cumulative invested | `features/portfolio/InvestedChart.tsx` | `investedSeries()` over the user's transactions |
+
+Rules that keep them honest:
+
+- Every figure a chart encodes is also printed as text beside it. A chart is a summary, never the
+  only way to read a number.
+- The area chart plots **invested**, not portfolio value. A value curve needs a price for every
+  past day and the cache holds only the latest one; drawing it from today's price would invent
+  history.
+- Ratios used for geometry are plain `number` — they are layout, not money. The amounts are summed
+  with the decimal helpers and formatted from the decimal string.
+- Ring colours are shades of the one accent and repeat after six holdings, which is acceptable
+  precisely because the percentage is written next to each row.
+
+### 11.3 Deliberate omissions
+
+The dashboard mockup contains three things V1 does not render, because the data behind them does
+not exist and inventing it would break §12's honesty rules:
+
+| In the mockup | Why it is absent |
+| --- | --- |
+| Notification bell | Notifications are out of V1 scope (§3.2). A bell that never rings is a lie. |
+| Cash Balance | DCAfolio records purchases, not a cash account. There is no balance to report. |
+| Date-range picker and "vs all time" deltas | A portfolio position is all-time by definition; a date-filtered "portfolio value" would mislead. History already has date filters, where they mean something. |
+
+Summary reports what is real instead: stocks held, shares held, purchases recorded.
 
 **Font**: Inter for Latin, followed by Thai-capable faces (`Noto Sans Thai`, `IBM Plex Sans Thai`,
 `Sarabun`, `Leelawadee UI`, `Tahoma`). Fallback is per glyph, so Latin stays on Inter while Thai

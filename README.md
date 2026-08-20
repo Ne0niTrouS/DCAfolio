@@ -18,9 +18,13 @@ BUY STOCK → RECORD PURCHASE → CALCULATE COST → GET MARKET PRICE
 
 ## Features
 
-**Dashboard** — portfolio value, total invested, profit/loss, return %, DCA per month, allocation
-per stock, recent purchases, and a market-data strip that always names the provider and how old
-the price is.
+**Dashboard** — portfolio value, total invested, profit/loss, return %, DCA per month; an
+allocation ring with a row per holding; a chart of what you have invested over time; recent
+purchases; and a market-data strip that always names the provider and how old the price is.
+
+Both charts are hand-drawn SVG — no charting library, nothing fetched at runtime. The area chart
+plots **invested**, not portfolio value: a value curve would need a price for every past day, and
+only the latest one is cached, so drawing it would invent history.
 
 **Transactions** — add, edit and delete purchases. Live-derived price per share. Deleting asks
 for confirmation and says the portfolio will be recalculated.
@@ -231,7 +235,7 @@ and return codes rather than sentences.
 npm test
 ```
 
-285 tests across four projects. Financial calculations are the highest priority:
+292 tests across four projects. Financial calculations are the highest priority:
 `packages/calculation` is developed test-first and sits at 100% of statements, lines and
 functions, covering one transaction, many at different prices, positive profit, negative loss,
 exactly zero, zero shares, zero invested, invalid values, missing prices, stale prices, and the
@@ -240,7 +244,7 @@ state after an edit or a delete.
 Database tests apply the real migration files to an in-process Postgres (PGlite) behind a minimal
 Supabase shim, so RLS policies execute the way they do in production — no Docker needed.
 
-Overall coverage: 93.3% statements, 94.5% lines.
+Overall coverage: 93.7% statements, 95.1% lines.
 
 ---
 
