@@ -1,0 +1,17 @@
+{
+  "name": "@dcafolio/calculation",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@dcafolio/shared": "*",
+    "decimal.js": "^10.6.0"
+  }
+}
