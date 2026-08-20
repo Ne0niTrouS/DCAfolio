@@ -239,8 +239,9 @@ as stale at read time, so staleness is correct even if nothing has written recen
 create index transactions_user_date_idx  on transactions (user_id, purchase_date desc);
 create index transactions_user_stock_idx on transactions (user_id, stock_id);
 create index market_prices_stock_time_idx on market_prices (stock_id, captured_at desc);
-create index stocks_symbol_idx on stocks (symbol);
 ```
+
+`stocks.symbol` needs no explicit index — its `UNIQUE` constraint already creates one.
 
 ### 3.6 Triggers
 
