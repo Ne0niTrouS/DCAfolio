@@ -6,7 +6,15 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['**/dist/**', '**/coverage/**', '**/node_modules/**', 'supabase/.temp/**'],
+    ignores: [
+      '**/dist/**',
+      '**/coverage/**',
+      '**/node_modules/**',
+      'supabase/.temp/**',
+      // Deno runtime: different globals and URL/JSR imports, linted by the
+      // Supabase CLI rather than by this Node-oriented config.
+      'supabase/functions/**',
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

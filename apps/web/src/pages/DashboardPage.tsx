@@ -5,6 +5,7 @@ import { Button } from '@/components/Button';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { MarketStatusStrip } from '@/features/market-data/MarketStatusStrip';
 import { useLatestPrices } from '@/features/market-data/use-latest-prices';
+import { useMarketStatus } from '@/features/market-data/use-market-status';
 import { KpiCards } from '@/features/portfolio/KpiCards';
 import { PositionList } from '@/features/portfolio/PositionList';
 import { RecentTransactions } from '@/features/portfolio/RecentTransactions';
@@ -16,6 +17,7 @@ import { mapDataError } from '@/lib/errors';
 export function DashboardPage() {
   const { portfolio, transactions, isLoading, error, refetch, isEmpty } = usePortfolio();
   const pricesQuery = useLatestPrices();
+  const marketStatus = useMarketStatus();
   const { data: stocks = [] } = useStocks();
   const [adding, setAdding] = useState(false);
 
@@ -45,7 +47,11 @@ export function DashboardPage() {
         <>
           <KpiCards portfolio={portfolio} />
 
-          <MarketStatusStrip prices={pricesQuery.data ?? []} failed={pricesQuery.isError} />
+          <MarketStatusStrip
+            prices={pricesQuery.data ?? []}
+            marketState={marketStatus.data?.state ?? 'unknown'}
+            failed={pricesQuery.isError}
+          />
 
           <section aria-labelledby="positions-heading">
             <h2 id="positions-heading" className="text-sm font-semibold text-ink">
