@@ -32,7 +32,7 @@ npm run build     # when the phase touched apps/web
 | 9 | Export | ✅ Complete |
 | 10 | Responsive Polish | ✅ Complete |
 | 11 | Quality | ✅ Complete |
-| 12 | Deployment | ⬜ Not started |
+| 12 | Deployment | 🟡 Documented, not executed (needs owner credentials) |
 
 ---
 
@@ -571,6 +571,21 @@ built bundle contains no secret-shaped strings.
 ## PHASE 12 — Deployment
 
 **Objective**: DCAfolio running in production on free tiers, verified.
+
+**Status (2026-08-20): documented, NOT executed.** Creating a GitHub remote, a Supabase project
+and a Cloudflare Pages site requires accounts and credentials the agent does not have, so every
+step is written up for the owner to run:
+[`deployment-runbook.md`](deployment-runbook.md). It covers GitHub, the Supabase project,
+`db push` and the seed, account creation (there is no sign-up screen), the Edge Function and its
+secrets, the Cloudflare Pages build settings, the SPA fallback, the auth redirect URLs, a
+17-point production verification list, the free-tier limits and rollback.
+
+The repository-side work of this phase **is** done: `apps/web/public/_redirects` ships the SPA
+fallback (verified present in `dist/` after a build), and `README.md` is complete.
+
+**Unverified until the owner runs it**: deployment URL, live sign-in, password-reset email
+delivery, Edge Function execution, and end-to-end cross-user isolation through GoTrue and
+PostgREST.
 
 ### Task 12.1 — GitHub
 - **Details**: push `main` to a GitHub repository; confirm `.env` and `node_modules` are absent
