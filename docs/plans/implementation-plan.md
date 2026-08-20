@@ -24,7 +24,7 @@ npm run build     # when the phase touched apps/web
 | 1 | Project Foundation | ✅ Complete |
 | 2 | Supabase Foundation | ✅ Complete (schema verified in PGlite; not yet applied to a real project) |
 | 3 | Authentication | ✅ Complete (unverified against a live Supabase project) |
-| 4 | Calculation Engine | ⬜ Not started |
+| 4 | Calculation Engine | ✅ Complete |
 | 5 | Transaction Management | ⬜ Not started |
 | 6 | Dashboard | ⬜ Not started |
 | 7 | Market Data | ⬜ Not started |
@@ -212,6 +212,11 @@ password-reset email — both need a provisioned project (Phase 12).
 ## PHASE 4 — Calculation Engine
 
 **Objective**: a decimal-safe, framework-independent calculation package developed test-first.
+
+**Outcome (verified 2026-08-20)**: 65 calculation tests pass. Coverage of `packages/calculation`:
+statements 100%, lines 100%, functions 100%, branches 98.14% — the one uncovered branch is a
+documented unreachable guard in `dca.ts`. Backed by `decimal.js` with half-away-from-zero
+rounding; `NaN` and `Infinity` cannot escape the package.
 
 ### Task 4.1 — Decimal foundation
 - **Files**: `packages/calculation/src/decimal.ts`, `packages/calculation/src/errors.ts`.
