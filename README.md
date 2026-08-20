@@ -34,6 +34,11 @@ profit/loss, return %, and the purchase history for one stock.
 **Export** — CSV and XLSX, for one stock or all, by month, by year, or all time. XLSX carries a
 Transactions sheet and a Summary sheet.
 
+**Thai and English** — one selector, on the login card and in the navbar. It shows the language
+you are in, not a generic caption. Thai is the default: login always opens in Thai and so does
+the app right after you sign in. Switching to English lasts for the session and follows you
+across pages and into dialogs; it is never stored, so login is Thai again next time.
+
 **Honest numbers** — a missing price shows `—` rather than a zero. A cached price is labelled
 cached. Mock data is labelled mock. Profit and loss always carry an explicit `+` or `−`, never
 colour alone.
@@ -60,7 +65,8 @@ cache — lives in an Edge Function.
 ```
 apps/web/              React application
 packages/calculation/  pure decimal-safe financial math — no React, no Supabase, no I/O
-packages/shared/       types, constants, formatters, validation
+packages/shared/       types, constants, formatters, validation — locale-free
+apps/web/src/i18n/     Thai and English dictionaries, language state, translator
 supabase/              migrations, seed, Edge Functions, database tests
 docs/                  design, plans, provider evaluation, security review
 ```
@@ -201,13 +207,31 @@ as stale at read time, so a stopped refresh job cannot make an old price look cu
 
 ---
 
+## Language
+
+Thai and English, held in `apps/web/src/i18n`. Components never contain a literal string — every
+label goes through `t()`.
+
+Adding a phrase: put it in `en.ts` first (the key type is derived from that file), then in
+`th.ts`, which the typecheck will demand. Use `{name}` for anything interpolated.
+
+The active language is **not persisted**. That is deliberate rather than an oversight: it is what
+makes login always open in Thai, no matter what was chosen last time. Crossing the sign-in
+boundary in either direction resets to Thai.
+
+Only UI text is translated. Stock symbols, Thai company names, money and dates are data, so a
+language change never rewrites them. `packages/shared` and `packages/calculation` stay locale-free
+and return codes rather than sentences.
+
+---
+
 ## Testing
 
 ```bash
 npm test
 ```
 
-273 tests across four projects. Financial calculations are the highest priority:
+285 tests across four projects. Financial calculations are the highest priority:
 `packages/calculation` is developed test-first and sits at 100% of statements, lines and
 functions, covering one transaction, many at different prices, positive profit, negative loss,
 exactly zero, zero shares, zero invested, invalid values, missing prices, stale prices, and the
@@ -216,7 +240,7 @@ state after an edit or a delete.
 Database tests apply the real migration files to an in-process Postgres (PGlite) behind a minimal
 Supabase shim, so RLS policies execute the way they do in production — no Docker needed.
 
-Overall coverage: 92.5% statements, 93.8% lines.
+Overall coverage: 93.3% statements, 94.5% lines.
 
 ---
 

@@ -33,6 +33,7 @@ npm run build     # when the phase touched apps/web
 | 10 | Responsive Polish | ✅ Complete |
 | 11 | Quality | ✅ Complete |
 | 12 | Deployment | 🟡 Documented, not executed (needs owner credentials) |
+| 13 | UI Redesign & Localization | ✅ Complete (browser-verified signed out; signed-in screens covered by tests only) |
 
 ---
 
@@ -630,3 +631,52 @@ limitations · next phase.
 
 At final completion, additionally report: deployment URL · Supabase status · market-data provider
 in use · free-tier limitations · remaining risks · recommended V2 features.
+
+---
+
+## PHASE 13 — UI Redesign and Localization
+
+**Objective**: one premium fintech design language across every screen, and a complete
+Thai/English UI language switcher — with no change to authentication, data access, calculation,
+export or the schema.
+
+### Task 13.1 — Locale-free packages
+- **Files**: `packages/shared/src/validation.ts`, `packages/shared/src/format.ts`,
+  `packages/shared/src/constants.ts`, `apps/web/src/lib/errors.ts`,
+  `apps/web/src/features/auth/auth-errors.ts`.
+- **Details**: validation and the two Supabase error mappers return message codes instead of
+  English sentences; `formatRelativeTime` becomes `relativeTimeParts`, returning a unit and a
+  count so the client supplies the wording; `APP_SUBTITLE` moves into the dictionaries.
+- **Tests**: the existing shared and mapper suites, rewritten to assert codes.
+- **Verification**: `packages/*` contain no user-facing sentence.
+
+### Task 13.2 — Language system
+- **Files**: `apps/web/src/i18n/{en,th,language-context,translate,use-language,use-relative-time}.ts`,
+  `apps/web/src/i18n/LanguageProvider.tsx`, `apps/web/src/components/LanguageSelector.tsx`,
+  `apps/web/src/main.tsx`.
+- **Details**: `TranslationKey` derives from the English dictionary and Thai is typed against it.
+  The provider holds the choice in memory only and resets it whenever the authentication status
+  changes. One selector serves both the login card and the navbar, showing the active language.
+- **Tests**: `apps/web/src/i18n/__tests__/i18n.test.tsx`.
+- **Verification**: login opens in Thai; English survives navigation and reaches open modals;
+  refresh and sign-out return to Thai.
+
+### Task 13.3 — Design system and localized screens
+- **Files**: `apps/web/src/index.css` (tokens), every component, layout and page.
+- **Details**: dark sidebar and navbar, light content, white cards, green accent; login on the
+  same dark brand surface with a white elevated card and no forgot-password link, social sign-in
+  or marketing copy; Thai-capable font fallbacks after Inter.
+- **Tests**: the existing component and page suites, now looking phrases up rather than repeating
+  English literals.
+- **Verification**: typecheck, lint, 285 tests, production build; no horizontal scroll at 375px.
+
+**Scope note**: removing the forgot-password link was specified. `/forgot-password` remains a
+working public route reachable from a reset email, so the V1 capability in §3.1 and the
+definition of done are intact; only the signed-out entry point is gone.
+
+**Expected result**: the same functionality, a coherent premium UI, and every visible label
+available in Thai and English.
+**Commits**: `refactor: return message codes instead of English sentences` ·
+`feat: add Thai and English UI localization` ·
+`feat: restyle DCAfolio as a dark-navigation fintech UI` ·
+`test: cover the language default, switching and both dictionaries`.

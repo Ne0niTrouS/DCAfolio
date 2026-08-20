@@ -132,7 +132,14 @@ Dependency direction is one-way: `apps/web -> packages/* `. Packages must never 
 - Currency display: Thai Baht, `฿` prefix, thousands separators, 2 decimal places by default.
 - Profit/loss must be communicated with an explicit `+` / `-` sign, never by colour alone.
 - Comments explain *why*, not *what*. Keep comment density low and matched to surrounding code.
-- All user-facing UI text is English; stock names carry a Thai name field (`name_th`).
+- All user-facing UI text is translated: every string goes through `t()` from
+  `apps/web/src/i18n`, never a literal in a component. Thai is the default language and
+  English is the alternative. Adding a phrase means adding it to `en.ts` first — the key type is
+  derived from it — and then to `th.ts`, which the typecheck requires.
+- Only UI text is translated. Stock symbols, Thai company names (`name_th`), money and dates are
+  data and are never rewritten by a language change.
+- Packages stay locale-free. `packages/shared` and `packages/calculation` return codes and
+  structured values; the web app renders the wording.
 
 ---
 

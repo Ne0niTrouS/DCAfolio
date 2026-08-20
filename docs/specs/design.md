@@ -139,19 +139,26 @@ child route or a redirect to `/login`.
 
 ### 2.4 Login screen
 
+A white card centred on the dark brand surface, with the language selector above it.
+
 ```
-              DCAfolio
-       Personal Stock Tracker
+                                     [ ไทย ▾ ]
+  ┌────────────────────────────────────────────┐
+  │                 DCAfolio                   │
+  │          ติดตามพอร์ตหุ้นส่วนตัว                  │
+  │                                            │
+  │  อีเมล      [                        ]      │
+  │  รหัสผ่าน    [                        ]      │
+  │                                            │
+  │           [      เข้าสู่ระบบ      ]           │
+  └────────────────────────────────────────────┘
 
-  Email     [                      ]
-  Password  [                      ]
-
-           [      Login      ]
-
-          Forgot Password?
-
-           © NeOniTrouS
+                © NeOniTrouS
 ```
+
+The card carries nothing else: no social sign-in, no registration link, no marketing copy, and
+no forgot-password link. `/forgot-password` remains a working public route, reachable directly
+and from the link in a reset email, but the signed-out UI does not advertise it.
 
 Validation: email format, password required. Errors from Supabase are surfaced as a single
 human-readable message (never a raw error object). The submit button shows a pending state and
@@ -621,9 +628,48 @@ Rules:
 - Numeric inputs use `inputMode="decimal"` for a usable mobile keypad.
 - Dialogs become full-screen sheets on mobile.
 
-**Design language**: clean, minimal, modern, trustworthy — personal finance, not a trading
-terminal. Neutral surfaces, one accent colour, generous spacing, tabular numerals for figures.
-No excessive charts, no decorative animation.
+**Design language**: a premium personal-investment surface — clean, minimal, modern, trustworthy;
+personal finance, not a trading terminal. Dark navigation, light content, white cards with soft
+shadows, one green accent, generous spacing, tabular numerals for figures. No excessive charts,
+no decorative animation.
+
+Design tokens live in `apps/web/src/index.css` under Tailwind's `@theme`:
+
+| Role | Token | Value |
+| --- | --- | --- |
+| Accent / profit | `accent`, `accent-strong`, `accent-light`, `accent-subtle` | `#16A34A` · `#15803D` · `#DCFCE7` · `#F0FDF4` |
+| Navigation | `nav`, `nav-hover`, `nav-active`, `nav-ink`, `nav-ink-muted` | `#111827` · `#1F2937` · `rgb(22 163 74 / .15)` · `#E5E7EB` · `#94A3B8` |
+| Content | `surface`, `surface-raised`, `surface-sunken`, `border-subtle` | `#F8FAFC` · `#FFFFFF` · `#F1F5F9` · `#E5E7EB` |
+| Text | `ink`, `ink-muted`, `ink-faint` | `#111827` · `#64748B` · `#94A3B8` |
+| Loss | `loss` | `#DC2626` |
+
+Inputs use a `#D1D5DB` border and a green focus ring; the browser's default focus styling is
+never relied on.
+
+**Font**: Inter for Latin, followed by Thai-capable faces (`Noto Sans Thai`, `IBM Plex Sans Thai`,
+`Sarabun`, `Leelawadee UI`, `Tahoma`). Fallback is per glyph, so Latin stays on Inter while Thai
+renders in a real Thai UI face. Nothing is fetched from a font CDN.
+
+### 11.1 Language
+
+Thai and English, switched from one selector — top-right of the signed-out card, and in the
+navbar once signed in. The button shows the active language ("ไทย" / "English"), never a generic
+caption; the menu offers exactly those two options and marks the current one.
+
+| Layer | File | Responsibility |
+| --- | --- | --- |
+| Dictionaries | `i18n/en.ts`, `i18n/th.ts` | Every phrase. `TranslationKey` derives from `en`, and `th` is typed against it, so a gap is a compile error. |
+| Translator | `i18n/translate.ts` | Lookup plus `{name}` substitution. |
+| State | `i18n/LanguageProvider.tsx` | Holds the choice; resets on any authentication-status change. |
+| Access | `i18n/use-language.ts` | `useLanguage()` / `useT()`. Without a provider it reports the default language rather than throwing. |
+| Control | `components/LanguageSelector.tsx` | The one selector, used in both places. |
+
+The choice is **never persisted**. That is what guarantees the required behaviour: login always
+opens in Thai, a successful sign-in starts the application in Thai, English survives navigation
+between pages and into open modals, and signing out returns login to Thai.
+
+Only UI text is translated. Stock symbols, `name_th`, money and dates are data and never change
+with the language.
 
 **Accessibility**: semantic landmarks, labelled form controls, visible focus rings, WCAG AA
 contrast, profit/loss conveyed by sign and text as well as colour, dialogs trap focus and close
