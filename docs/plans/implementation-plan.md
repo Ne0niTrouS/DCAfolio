@@ -28,7 +28,7 @@ npm run build     # when the phase touched apps/web
 | 5 | Transaction Management | ✅ Complete (unverified against a live Supabase project) |
 | 6 | Dashboard | ✅ Complete |
 | 7 | Market Data | ✅ Complete (mock provider is the documented default) |
-| 8 | History | ⬜ Not started |
+| 8 | History | ✅ Complete |
 | 9 | Export | ⬜ Not started |
 | 10 | Responsive Polish | ⬜ Not started |
 | 11 | Quality | ⬜ Not started |
@@ -417,6 +417,11 @@ project — Phase 12).
 ## PHASE 8 — History
 
 **Objective**: the full transaction log with search, filters and inline edit/delete.
+
+**Outcome (verified 2026-08-20)**: 231 tests pass. The table's columns are asserted against the
+design, both the desktop table and the mobile cards render, search covers symbol and Thai name,
+stock and date filters are asserted to reach the query as `eq`/`gte` filters, and
+"no transactions" is distinguished from "no match for these filters".
 
 ### Task 8.1 — History query with filters
 - **Files**: `apps/web/src/features/transactions/use-transaction-history.ts`.
