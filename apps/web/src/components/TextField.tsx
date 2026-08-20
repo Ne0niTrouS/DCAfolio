@@ -6,6 +6,10 @@ type TextFieldProps = InputHTMLAttributes<HTMLInputElement> & {
   hint?: string | undefined;
 };
 
+/** Green focus treatment throughout — the browser's default blue is never used. */
+const FIELD_BASE =
+  'min-h-11 w-full rounded-lg border bg-surface-raised px-3 text-sm text-ink transition-colors placeholder:text-ink-faint focus:outline-none focus:ring-4';
+
 export function TextField({ label, error, hint, className = '', ...rest }: TextFieldProps) {
   const generatedId = useId();
   const id = rest.id ?? generatedId;
@@ -23,8 +27,10 @@ export function TextField({ label, error, hint, className = '', ...rest }: TextF
         id={id}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy || undefined}
-        className={`min-h-11 rounded-lg border bg-surface-raised px-3 text-sm text-ink placeholder:text-ink-muted ${
-          error ? 'border-loss' : 'border-border-subtle'
+        className={`${FIELD_BASE} ${
+          error
+            ? 'border-loss focus:border-loss focus:ring-loss/15'
+            : 'border-gray-300 focus:border-accent focus:ring-accent/15'
         } ${className}`}
       />
       {hint ? (

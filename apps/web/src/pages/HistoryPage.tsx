@@ -10,6 +10,7 @@ import { TransactionDialog } from '@/features/transactions/TransactionDialog';
 import { TransactionTable } from '@/features/transactions/TransactionTable';
 import { useStocks, useTransactions } from '@/features/transactions/queries';
 import { useTransactionHistory } from '@/features/transactions/use-transaction-history';
+import { useT } from '@/i18n/use-language';
 import { mapDataError } from '@/lib/errors';
 
 /** The stock filter lists only stocks the user owns. */
@@ -22,6 +23,7 @@ function ownedStocks(transactions: TransactionWithStock[]): Stock[] {
 }
 
 export function HistoryPage() {
+  const t = useT();
   const history = useTransactionHistory();
   const allTransactions = useTransactions();
   const { data: stocks = [] } = useStocks();
@@ -37,40 +39,42 @@ export function HistoryPage() {
 
   return (
     <section className="flex flex-col gap-5">
-      <h1 className="text-2xl font-semibold tracking-tight text-ink">History</h1>
+      <h1 className="text-2xl font-semibold tracking-tight text-ink">{t('history.title')}</h1>
 
-      <HistoryFilters
-        filters={history.filters}
-        stocks={filterStocks}
-        hasFilters={history.hasFilters}
-        onChange={history.setFilters}
-        onClear={history.clearFilters}
-      />
+      <div className="rounded-2xl border border-border-subtle bg-surface-raised p-4 shadow-sm">
+        <HistoryFilters
+          filters={history.filters}
+          stocks={filterStocks}
+          hasFilters={history.hasFilters}
+          onChange={history.setFilters}
+          onClear={history.clearFilters}
+        />
+      </div>
 
-      {history.isLoading ? <LoadingState label="Loading your transactions…" /> : null}
+      {history.isLoading ? <LoadingState label={t('history.loadingTransactions')} /> : null}
 
       {!history.isLoading && history.error ? (
         <ErrorState
-          title="Could not load your transactions."
-          description={mapDataError(history.error)}
+          title={t('history.loadError')}
+          description={t(mapDataError(history.error))}
           onRetry={() => void history.refetch()}
         />
       ) : null}
 
       {!history.isLoading && !history.error && history.isEmpty ? (
         <EmptyState
-          title="No transactions yet."
-          description="Add your first stock purchase."
-          action={<Button onClick={() => setAdding(true)}>Add Purchase</Button>}
+          title={t('history.emptyTitle')}
+          description={t('dashboard.emptyBody')}
+          action={<Button onClick={() => setAdding(true)}>{t('common.addPurchase')}</Button>}
         />
       ) : null}
 
       {!history.isLoading && !history.error && history.hasNoMatches ? (
         <EmptyState
-          title="No transactions match these filters."
+          title={t('history.noMatches')}
           action={
             <Button variant="secondary" onClick={history.clearFilters}>
-              Clear filters
+              {t('history.clearFilters')}
             </Button>
           }
         />
@@ -78,7 +82,7 @@ export function HistoryPage() {
 
       {!history.isLoading && !history.error && history.transactions.length > 0 ? (
         <>
-          <div className="hidden md:block">
+          <div className="hidden overflow-hidden rounded-2xl border border-border-subtle bg-surface-raised shadow-sm md:block">
             <TransactionTable
               transactions={history.transactions}
               onEdit={setEditing}

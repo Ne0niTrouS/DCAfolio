@@ -14,7 +14,7 @@ export function ProtectedRoute() {
   const location = useLocation();
 
   if (status === 'loading') {
-    return <FullPageSpinner label="Checking your session…" />;
+    return <FullPageSpinner />;
   }
 
   if (status === 'unauthenticated') {

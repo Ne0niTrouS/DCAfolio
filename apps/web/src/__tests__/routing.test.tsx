@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { createAuthValue, renderWithAuth } from '@/test/auth-harness';
 import { createSupabaseMock } from '@/test/supabase-mock';
+import { phrase } from '@/test/i18n-harness';
 
 // The app shell loads the stock master for the Add Purchase dialog; only that
 // I/O boundary is mocked.
@@ -16,7 +17,9 @@ describe('routing and route protection', () => {
     renderWithAuth(<App />, { auth: createAuthValue({ status: 'loading' }) });
 
     expect(screen.getByRole('status')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Login' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: phrase('auth.login') }),
+    ).not.toBeInTheDocument();
   });
 
   it('redirects an unauthenticated visitor to the login screen', async () => {
@@ -25,7 +28,9 @@ describe('routing and route protection', () => {
       initialEntries: ['/'],
     });
 
-    expect(await screen.findByRole('button', { name: 'Login' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('button', { name: phrase('auth.login') }),
+    ).toBeInTheDocument();
   });
 
   it('protects history, export and stock detail as well as the dashboard', async () => {
@@ -35,7 +40,9 @@ describe('routing and route protection', () => {
         initialEntries: [path],
       });
 
-      expect(await screen.findByRole('button', { name: 'Login' })).toBeInTheDocument();
+      expect(
+        await screen.findByRole('button', { name: phrase('auth.login') }),
+      ).toBeInTheDocument();
       unmount();
     }
   });
@@ -46,7 +53,9 @@ describe('routing and route protection', () => {
       initialEntries: ['/'],
     });
 
-    expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: phrase('dashboard.title') }),
+    ).toBeInTheDocument();
     expect(screen.getAllByRole('navigation', { name: 'Main' }).length).toBeGreaterThan(0);
   });
 
@@ -54,7 +63,7 @@ describe('routing and route protection', () => {
     const auth = createAuthValue({ status: 'authenticated' });
     renderWithAuth(<App />, { auth, initialEntries: ['/'] });
 
-    const [logout] = await screen.findAllByRole('button', { name: 'Logout' });
+    const [logout] = await screen.findAllByRole('button', { name: phrase('common.logout') });
     await userEvent.click(logout!);
 
     expect(auth.signOut).toHaveBeenCalled();
@@ -66,7 +75,9 @@ describe('routing and route protection', () => {
       initialEntries: ['/login'],
     });
 
-    expect(await screen.findByRole('button', { name: 'Login' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('button', { name: phrase('auth.login') }),
+    ).toBeInTheDocument();
   });
 
   it('sends a signed-in user away from the login screen', async () => {
@@ -75,7 +86,9 @@ describe('routing and route protection', () => {
       initialEntries: ['/login'],
     });
 
-    expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: phrase('dashboard.title') }),
+    ).toBeInTheDocument();
   });
 
   it('shows a not-found page for an unknown path', async () => {
@@ -84,6 +97,8 @@ describe('routing and route protection', () => {
       initialEntries: ['/nope'],
     });
 
-    expect(await screen.findByRole('heading', { name: 'Page not found' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: phrase('common.notFoundTitle') }),
+    ).toBeInTheDocument();
   });
 });

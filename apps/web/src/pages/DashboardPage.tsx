@@ -12,9 +12,11 @@ import { RecentTransactions } from '@/features/portfolio/RecentTransactions';
 import { usePortfolio } from '@/features/portfolio/use-portfolio';
 import { TransactionDialog } from '@/features/transactions/TransactionDialog';
 import { useStocks } from '@/features/transactions/queries';
+import { useT } from '@/i18n/use-language';
 import { mapDataError } from '@/lib/errors';
 
 export function DashboardPage() {
+  const t = useT();
   const { portfolio, transactions, isLoading, error, refetch, isEmpty } = usePortfolio();
   const pricesQuery = useLatestPrices();
   const marketStatus = useMarketStatus();
@@ -23,23 +25,23 @@ export function DashboardPage() {
 
   return (
     <section className="flex flex-col gap-5">
-      <h1 className="text-2xl font-semibold tracking-tight text-ink">Dashboard</h1>
+      <h1 className="text-2xl font-semibold tracking-tight text-ink">{t('dashboard.title')}</h1>
 
-      {isLoading ? <LoadingState label="Loading your portfolio…" /> : null}
+      {isLoading ? <LoadingState label={t('dashboard.loadingPortfolio')} /> : null}
 
       {!isLoading && error ? (
         <ErrorState
-          title="Could not load your portfolio."
-          description={mapDataError(error)}
+          title={t('dashboard.loadError')}
+          description={t(mapDataError(error))}
           onRetry={() => void refetch()}
         />
       ) : null}
 
       {!isLoading && !error && isEmpty ? (
         <EmptyState
-          title="No investments yet."
-          description="Add your first stock purchase."
-          action={<Button onClick={() => setAdding(true)}>Add Purchase</Button>}
+          title={t('dashboard.emptyTitle')}
+          description={t('dashboard.emptyBody')}
+          action={<Button onClick={() => setAdding(true)}>{t('common.addPurchase')}</Button>}
         />
       ) : null}
 
@@ -54,10 +56,13 @@ export function DashboardPage() {
           />
 
           <section aria-labelledby="positions-heading">
-            <h2 id="positions-heading" className="text-sm font-semibold text-ink">
-              Portfolio allocation
+            <h2
+              id="positions-heading"
+              className="text-sm font-semibold tracking-tight text-ink"
+            >
+              {t('dashboard.allocation')}
             </h2>
-            <div className="mt-2">
+            <div className="mt-3">
               <PositionList positions={portfolio.positions} />
             </div>
           </section>

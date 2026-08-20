@@ -2,6 +2,7 @@ import { screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createAuthValue, renderWithAuth } from '@/test/auth-harness';
+import { phrase } from '@/test/i18n-harness';
 
 const state = vi.hoisted(() => ({
   transactions: [] as unknown[],
@@ -91,19 +92,19 @@ describe('DashboardPage', () => {
   it('invites a first purchase when nothing has been recorded', async () => {
     render();
 
-    expect(await screen.findByText('No investments yet.')).toBeInTheDocument();
-    expect(screen.getByText('Add your first stock purchase.')).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: 'Add Purchase' }).length).toBeGreaterThan(0);
+    expect(await screen.findByText(phrase('dashboard.emptyTitle'))).toBeInTheDocument();
+    expect(screen.getByText(phrase('dashboard.emptyBody'))).toBeInTheDocument();
+    expect(
+      screen.getAllByRole('button', { name: phrase('common.addPurchase') }).length,
+    ).toBeGreaterThan(0);
   });
 
   it('reports a failure to load without blanking the page', async () => {
     state.transactionsError = new Error('permission denied for table transactions');
     render();
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Could not load your portfolio.',
-    );
-    expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
+    expect(await screen.findByRole('alert')).toHaveTextContent(phrase('dashboard.loadError'));
+    expect(screen.getByRole('button', { name: phrase('common.tryAgain') })).toBeInTheDocument();
   });
 
   it('answers invested, worth and up-or-down at a glance', async () => {
@@ -111,7 +112,7 @@ describe('DashboardPage', () => {
     state.prices = [priceRow()];
     render();
 
-    expect(await screen.findByText('Portfolio Value')).toBeInTheDocument();
+    expect(await screen.findByText(phrase('dashboard.portfolioValue'))).toBeInTheDocument();
     expect(screen.getAllByText('฿13,000.00').length).toBeGreaterThan(0);
     expect(screen.getAllByText('฿12,500.00').length).toBeGreaterThan(0);
     expect(screen.getAllByText('+฿500.00').length).toBeGreaterThan(0);
@@ -125,7 +126,9 @@ describe('DashboardPage', () => {
 
     expect((await screen.findAllByText('-฿1,500.00')).length).toBeGreaterThan(0);
     expect(screen.getAllByText('-12.00%').length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/\(loss\)/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(`(${phrase('value.loss')})`, { exact: false })).not.toHaveLength(
+      0,
+    );
   });
 
   it('keeps working when there is no market price at all', async () => {
@@ -134,8 +137,8 @@ describe('DashboardPage', () => {
     render();
 
     expect((await screen.findAllByText('฿12,500.00')).length).toBeGreaterThan(0);
-    expect(screen.getByText('Partial — some stocks have no price yet')).toBeInTheDocument();
-    expect(screen.getByText('No market price yet')).toBeInTheDocument();
+    expect(screen.getByText(phrase('dashboard.partialPricing'))).toBeInTheDocument();
+    expect(screen.getByText(phrase('market.noPriceYet'))).toBeInTheDocument();
   });
 
   it('labels a cached price instead of passing it off as live', async () => {
@@ -143,7 +146,7 @@ describe('DashboardPage', () => {
     state.prices = [priceRow({ captured_at: '2026-08-19T09:00:00.000Z' })];
     render();
 
-    expect(await screen.findByText('Cached — may be out of date')).toBeInTheDocument();
+    expect(await screen.findByText(phrase('market.cachedBadge'))).toBeInTheDocument();
   });
 
   it('labels mock data as mock', async () => {
@@ -151,8 +154,10 @@ describe('DashboardPage', () => {
     state.prices = [priceRow()];
     render();
 
-    expect(await screen.findByText('Mock data — not real prices')).toBeInTheDocument();
-    expect(screen.getByText('Provider: mock')).toBeInTheDocument();
+    expect(await screen.findByText(phrase('market.mockBadge'))).toBeInTheDocument();
+    expect(
+      screen.getByText(phrase('market.provider', { provider: 'mock' })),
+    ).toBeInTheDocument();
   });
 
   it('keeps the dashboard usable when the price query fails', async () => {
@@ -160,8 +165,8 @@ describe('DashboardPage', () => {
     state.pricesError = new Error('network down');
     render();
 
-    expect(await screen.findByText('Total Invested')).toBeInTheDocument();
-    expect(screen.getByText('Cached — may be out of date')).toBeInTheDocument();
+    expect(await screen.findByText(phrase('dashboard.totalInvested'))).toBeInTheDocument();
+    expect(screen.getByText(phrase('market.cachedBadge'))).toBeInTheDocument();
   });
 
   it('lists positions and recent transactions', async () => {
@@ -173,7 +178,7 @@ describe('DashboardPage', () => {
       'href',
       '/stocks/CPALL',
     );
-    expect(screen.getByText('Recent transactions')).toBeInTheDocument();
+    expect(screen.getByText(phrase('dashboard.recentTransactions'))).toBeInTheDocument();
     expect(screen.getByText('09/08/2026')).toBeInTheDocument();
   });
 });

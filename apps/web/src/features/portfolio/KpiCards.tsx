@@ -2,6 +2,7 @@ import type { Portfolio } from '@dcafolio/calculation';
 import { UNAVAILABLE, formatMoney } from '@dcafolio/shared';
 
 import { SignedMoney, SignedPercent } from '@/components/SignedValue';
+import { useT } from '@/i18n/use-language';
 
 function Card({
   label,
@@ -13,42 +14,43 @@ function Card({
   note?: string;
 }) {
   return (
-    <div className="rounded-xl border border-border-subtle bg-surface-raised px-4 py-3">
+    <div className="rounded-2xl border border-border-subtle bg-surface-raised px-4 py-4 shadow-sm">
       <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">{label}</p>
-      <p className="mt-1 text-xl font-semibold">{children}</p>
-      {note ? <p className="mt-1 text-xs text-ink-muted">{note}</p> : null}
+      <p className="mt-2 text-xl font-semibold tracking-tight">{children}</p>
+      {note ? <p className="mt-1 text-xs text-ink-faint">{note}</p> : null}
     </div>
   );
 }
 
 /** The five numbers that answer: what did I put in, what is it worth, am I up? */
 export function KpiCards({ portfolio }: { portfolio: Portfolio }) {
+  const t = useT();
   const partial = portfolio.hasIncompletePricing;
 
   return (
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
       <Card
-        label="Portfolio Value"
-        {...(partial ? { note: 'Partial — some stocks have no price yet' } : {})}
+        label={t('dashboard.portfolioValue')}
+        {...(partial ? { note: t('dashboard.partialPricing') } : {})}
       >
         <span className="tnum text-ink">
           {portfolio.currentValue === null ? UNAVAILABLE : formatMoney(portfolio.currentValue)}
         </span>
       </Card>
 
-      <Card label="Total Invested">
+      <Card label={t('dashboard.totalInvested')}>
         <span className="tnum text-ink">{formatMoney(portfolio.totalInvested)}</span>
       </Card>
 
-      <Card label="Profit/Loss">
+      <Card label={t('dashboard.profitLoss')}>
         <SignedMoney value={portfolio.profitLoss} />
       </Card>
 
-      <Card label="Return %">
+      <Card label={t('dashboard.returnPercent')}>
         <SignedPercent value={portfolio.returnPercent} />
       </Card>
 
-      <Card label="DCA/month">
+      <Card label={t('dashboard.dcaPerMonth')}>
         <span className="tnum text-ink">
           {portfolio.dcaPerMonth === null ? UNAVAILABLE : formatMoney(portfolio.dcaPerMonth)}
         </span>

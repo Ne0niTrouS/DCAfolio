@@ -3,6 +3,8 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
+import { phrase } from '@/test/i18n-harness';
+
 import { TransactionCard } from '../TransactionCard';
 
 const CPALL: Stock = {
@@ -46,10 +48,18 @@ describe('TransactionCard', () => {
   it('names its actions so they mean something out of context', async () => {
     const { onEdit, onDelete } = setup();
 
-    await userEvent.click(screen.getByRole('button', { name: 'Edit CPALL on 09/08/2026' }));
+    await userEvent.click(
+      screen.getByRole('button', {
+        name: phrase('history.editRow', { symbol: 'CPALL', date: '09/08/2026' }),
+      }),
+    );
     expect(onEdit).toHaveBeenCalledWith(TRANSACTION);
 
-    await userEvent.click(screen.getByRole('button', { name: 'Delete CPALL on 09/08/2026' }));
+    await userEvent.click(
+      screen.getByRole('button', {
+        name: phrase('history.deleteRow', { symbol: 'CPALL', date: '09/08/2026' }),
+      }),
+    );
     expect(onDelete).toHaveBeenCalledWith(TRANSACTION);
   });
 });

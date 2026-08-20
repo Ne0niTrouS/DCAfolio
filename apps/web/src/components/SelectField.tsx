@@ -27,8 +27,10 @@ export function SelectField({
         id={id}
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? errorId : undefined}
-        className={`min-h-11 rounded-lg border bg-surface-raised px-3 text-sm text-ink ${
-          error ? 'border-loss' : 'border-border-subtle'
+        className={`min-h-11 w-full rounded-lg border bg-surface-raised px-3 text-sm text-ink transition-colors focus:outline-none focus:ring-4 ${
+          error
+            ? 'border-loss focus:border-loss focus:ring-loss/15'
+            : 'border-gray-300 focus:border-accent focus:ring-accent/15'
         } ${className}`}
       >
         {children}

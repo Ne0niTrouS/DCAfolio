@@ -1,26 +1,49 @@
 @import 'tailwindcss';
 
 /*
- * DCAfolio design tokens.
- * Clean, minimal, trustworthy personal finance — not a trading terminal.
- * One accent colour, neutral surfaces, tabular numerals for every figure.
+ * DCAfolio design system.
+ *
+ * Dark navigation, light content, one green accent. Premium and calm rather
+ * than a trading terminal: white cards on a cool grey page, soft shadows,
+ * tabular numerals for every figure.
  */
 @theme {
-  --color-surface: oklch(99% 0 0);
-  --color-surface-raised: oklch(100% 0 0);
-  --color-surface-sunken: oklch(96.5% 0.003 250);
-  --color-border-subtle: oklch(91% 0.004 250);
+  /* Accent — the only brand colour. */
+  --color-accent: #16a34a;
+  --color-accent-strong: #15803d;
+  --color-accent-light: #dcfce7;
+  --color-accent-subtle: #f0fdf4;
 
-  --color-ink: oklch(23% 0.012 250);
-  --color-ink-muted: oklch(52% 0.012 250);
+  /* Navigation surfaces: sidebar, navbar, mobile bars, login background. */
+  --color-nav: #111827;
+  --color-nav-hover: #1f2937;
+  --color-nav-active: rgb(22 163 74 / 0.15);
+  --color-nav-ink: #e5e7eb;
+  --color-nav-ink-muted: #94a3b8;
 
-  --color-accent: oklch(52% 0.14 250);
-  --color-accent-strong: oklch(44% 0.15 250);
+  /* Content surfaces. */
+  --color-surface: #f8fafc;
+  --color-surface-raised: #ffffff;
+  --color-surface-sunken: #f1f5f9;
+  --color-border-subtle: #e5e7eb;
 
-  --color-profit: oklch(48% 0.13 155);
-  --color-loss: oklch(52% 0.19 25);
+  /* Text. */
+  --color-ink: #111827;
+  --color-ink-muted: #64748b;
+  --color-ink-faint: #94a3b8;
 
-  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* Profit and loss. Colour is always a secondary cue: the sign carries it. */
+  --color-profit: #16a34a;
+  --color-loss: #dc2626;
+
+  /*
+   * Inter for Latin. Thai has no Inter coverage, so Thai-capable faces follow:
+   * the browser falls back per glyph, which keeps Latin on Inter while Thai
+   * renders in a proper Thai UI face instead of a broken tofu box.
+   */
+  --font-sans:
+    'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', 'Noto Sans Thai',
+    'IBM Plex Sans Thai', 'Sarabun', 'Leelawadee UI', Tahoma, sans-serif;
 }
 
 @layer base {
@@ -33,6 +56,8 @@
     color: var(--color-ink);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    /* Thai ascenders and tone marks need more room than Latin. */
+    line-height: 1.6;
   }
 
   /* Figures must line up in columns; money is read vertically, not as prose. */

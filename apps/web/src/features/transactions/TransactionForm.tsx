@@ -1,5 +1,6 @@
 import { pricePerShare } from '@dcafolio/calculation';
 import {
+  UNAVAILABLE,
   formatMoney,
   hasErrors,
   validateTransaction,
@@ -12,6 +13,8 @@ import { Alert } from '@/components/Alert';
 import { Button } from '@/components/Button';
 import { SelectField } from '@/components/SelectField';
 import { TextField } from '@/components/TextField';
+import type { TranslationKey } from '@/i18n/en';
+import { useT } from '@/i18n/use-language';
 
 import type { TransactionInput } from './mutations';
 
@@ -22,7 +25,7 @@ type TransactionFormProps = {
   initialValues?: Partial<TransactionFormValues>;
   submitLabel: string;
   pending?: boolean;
-  error?: string | null;
+  error?: TranslationKey | null;
   /** ISO `YYYY-MM-DD`. Injected so the future-date rule is testable. */
   today: string;
   onSubmit: (values: TransactionFormValues) => void;
@@ -48,6 +51,8 @@ export function TransactionForm({
   onSubmit,
   onCancel,
 }: TransactionFormProps) {
+  const t = useT();
+
   const [values, setValues] = useState<TransactionFormValues>({
     purchaseDate: initialValues?.purchaseDate ?? today,
     stockId: initialValues?.stockId ?? '',
@@ -84,24 +89,24 @@ export function TransactionForm({
 
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
-      {error ? <Alert>{error}</Alert> : null}
+      {error ? <Alert>{t(error)}</Alert> : null}
 
       <TextField
-        label="Purchase Date"
+        label={t('purchase.purchaseDate')}
         type="date"
         max={today}
         value={values.purchaseDate}
-        error={fieldErrors.purchaseDate}
+        error={fieldErrors.purchaseDate ? t(fieldErrors.purchaseDate) : undefined}
         onChange={(event) => update('purchaseDate', event.target.value)}
       />
 
       <SelectField
-        label="Stock"
+        label={t('purchase.stock')}
         value={values.stockId}
-        error={fieldErrors.stockId}
+        error={fieldErrors.stockId ? t(fieldErrors.stockId) : undefined}
         onChange={(event) => update('stockId', event.target.value)}
       >
-        <option value="">Select a stock</option>
+        <option value="">{t('purchase.selectStock')}</option>
         {stocks.map((stock) => (
           <option key={stock.id} value={stock.id}>
             {stock.symbol} — {stock.nameTh}
@@ -110,35 +115,37 @@ export function TransactionForm({
       </SelectField>
 
       <TextField
-        label="Invested Amount"
+        label={t('purchase.investedAmount')}
         type="text"
         inputMode="decimal"
         placeholder="12500"
         value={values.investedAmount}
-        error={fieldErrors.investedAmount}
+        error={fieldErrors.investedAmount ? t(fieldErrors.investedAmount) : undefined}
         onChange={(event) => update('investedAmount', event.target.value)}
       />
 
       <TextField
-        label="Shares Received"
+        label={t('purchase.sharesReceived')}
         type="text"
         inputMode="decimal"
         placeholder="200"
         value={values.shares}
-        error={fieldErrors.shares}
+        error={fieldErrors.shares ? t(fieldErrors.shares) : undefined}
         onChange={(event) => update('shares', event.target.value)}
       />
 
-      <p className="rounded-lg bg-surface-sunken px-3 py-2 text-sm text-ink-muted">
-        Calculated:{' '}
-        <span className="tnum font-medium text-ink">
-          {derivedPrice === null ? '—' : `${formatMoney(derivedPrice)}/share`}
+      <p className="flex items-baseline justify-between gap-3 rounded-xl border border-accent/20 bg-accent-subtle px-3 py-2.5 text-sm text-ink-muted">
+        {t('purchase.calculated')}
+        <span className="tnum text-base font-semibold text-accent-strong">
+          {derivedPrice === null
+            ? UNAVAILABLE
+            : t('purchase.perShare', { value: formatMoney(derivedPrice) })}
         </span>
       </p>
 
       <div className="mt-2 flex gap-3">
         <Button type="button" variant="secondary" className="flex-1" onClick={onCancel}>
-          Cancel
+          {t('common.cancel')}
         </Button>
         <Button type="submit" className="flex-1" pending={pending}>
           {submitLabel}

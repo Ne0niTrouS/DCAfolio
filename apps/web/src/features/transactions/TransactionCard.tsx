@@ -7,6 +7,7 @@ import {
 } from '@dcafolio/shared';
 
 import { Button } from '@/components/Button';
+import { useT } from '@/i18n/use-language';
 
 type TransactionCardProps = {
   transaction: TransactionWithStock;
@@ -19,49 +20,55 @@ type TransactionCardProps = {
  * facts, stacked, with touch-sized actions.
  */
 export function TransactionCard({ transaction, onEdit, onDelete }: TransactionCardProps) {
+  const t = useT();
   const perShare = pricePerShare(transaction.investedAmount, transaction.shares);
-  const label = `${transaction.stock.symbol} on ${formatDate(transaction.purchaseDate)}`;
+  const labelParams = {
+    symbol: transaction.stock.symbol,
+    date: formatDate(transaction.purchaseDate),
+  };
 
   return (
-    <article className="rounded-xl border border-border-subtle bg-surface-raised px-4 py-3">
+    <article className="rounded-2xl border border-border-subtle bg-surface-raised px-4 py-3.5 shadow-sm">
       <div className="flex items-baseline justify-between gap-3">
-        <span className="font-semibold text-ink">{transaction.stock.symbol}</span>
+        <span className="font-semibold tracking-tight text-ink">
+          {transaction.stock.symbol}
+        </span>
         <span className="tnum text-sm text-ink-muted">
           {formatDate(transaction.purchaseDate)}
         </span>
       </div>
 
-      <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+      <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
         <div className="flex justify-between">
-          <dt className="text-ink-muted">Invested</dt>
+          <dt className="text-ink-muted">{t('history.investedAmount')}</dt>
           <dd className="tnum text-ink">{formatMoney(transaction.investedAmount)}</dd>
         </div>
         <div className="flex justify-between">
-          <dt className="text-ink-muted">Shares</dt>
+          <dt className="text-ink-muted">{t('history.shares')}</dt>
           <dd className="tnum text-ink">{formatShares(transaction.shares)}</dd>
         </div>
         <div className="col-span-2 flex justify-between">
-          <dt className="text-ink-muted">Price / share</dt>
+          <dt className="text-ink-muted">{t('history.pricePerShare')}</dt>
           <dd className="tnum text-ink">{formatMoney(perShare)}</dd>
         </div>
       </dl>
 
-      <div className="mt-3 flex gap-2">
+      <div className="mt-4 flex gap-2">
         <Button
           variant="secondary"
           className="flex-1"
           onClick={() => onEdit(transaction)}
-          aria-label={`Edit ${label}`}
+          aria-label={t('history.editRow', labelParams)}
         >
-          Edit
+          {t('common.edit')}
         </Button>
         <Button
           variant="danger"
           className="flex-1"
           onClick={() => onDelete(transaction)}
-          aria-label={`Delete ${label}`}
+          aria-label={t('history.deleteRow', labelParams)}
         >
-          Delete
+          {t('common.delete')}
         </Button>
       </div>
     </article>

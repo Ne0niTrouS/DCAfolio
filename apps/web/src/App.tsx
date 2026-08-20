@@ -37,7 +37,7 @@ export function App() {
       <Route element={<ProtectedRoute />}>
         <Route
           element={
-            <Suspense fallback={<FullPageSpinner label="Loading…" />}>
+            <Suspense fallback={<FullPageSpinner />}>
               <AppShell />
             </Suspense>
           }

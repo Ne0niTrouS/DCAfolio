@@ -10,6 +10,8 @@ import { useState } from 'react';
 import { Alert } from '@/components/Alert';
 import { Button } from '@/components/Button';
 import { Modal } from '@/components/Modal';
+import type { TranslationKey } from '@/i18n/en';
+import { useT } from '@/i18n/use-language';
 import { mapDataError } from '@/lib/errors';
 
 import { useDeleteTransaction } from './mutations';
@@ -23,8 +25,9 @@ export function DeleteTransactionDialog({
   transaction,
   onClose,
 }: DeleteTransactionDialogProps) {
+  const t = useT();
   const remove = useDeleteTransaction();
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<TranslationKey | null>(null);
 
   const perShare = pricePerShare(transaction.investedAmount, transaction.shares);
 
@@ -37,38 +40,40 @@ export function DeleteTransactionDialog({
   }
 
   return (
-    <Modal title="Delete Transaction?" onClose={onClose}>
+    <Modal title={t('purchase.deleteTitle')} onClose={onClose}>
       <div className="flex flex-col gap-4">
-        {error ? <Alert>{error}</Alert> : null}
+        {error ? <Alert>{t(error)}</Alert> : null}
 
-        <dl className="rounded-lg bg-surface-sunken px-3 py-3 text-sm">
+        <dl className="rounded-xl border border-border-subtle bg-surface-sunken px-3 py-3 text-sm">
           <div className="flex justify-between">
-            <dt className="text-ink-muted">Stock</dt>
-            <dd className="font-medium text-ink">{transaction.stock.symbol}</dd>
+            <dt className="text-ink-muted">{t('history.stock')}</dt>
+            <dd className="font-semibold text-ink">{transaction.stock.symbol}</dd>
           </div>
-          <div className="mt-1 flex justify-between">
-            <dt className="text-ink-muted">Date</dt>
+          <div className="mt-1.5 flex justify-between">
+            <dt className="text-ink-muted">{t('history.date')}</dt>
             <dd className="tnum text-ink">{formatDate(transaction.purchaseDate)}</dd>
           </div>
-          <div className="mt-1 flex justify-between">
-            <dt className="text-ink-muted">Invested</dt>
+          <div className="mt-1.5 flex justify-between">
+            <dt className="text-ink-muted">{t('history.investedAmount')}</dt>
             <dd className="tnum text-ink">{formatMoney(transaction.investedAmount)}</dd>
           </div>
-          <div className="mt-1 flex justify-between">
-            <dt className="text-ink-muted">Shares</dt>
-            <dd className="tnum text-ink">{formatShares(transaction.shares)} shares</dd>
+          <div className="mt-1.5 flex justify-between">
+            <dt className="text-ink-muted">{t('history.shares')}</dt>
+            <dd className="tnum text-ink">
+              {formatShares(transaction.shares)} {t('common.sharesUnit')}
+            </dd>
           </div>
-          <div className="mt-1 flex justify-between">
-            <dt className="text-ink-muted">Price / share</dt>
+          <div className="mt-1.5 flex justify-between">
+            <dt className="text-ink-muted">{t('history.pricePerShare')}</dt>
             <dd className="tnum text-ink">{formatMoney(perShare)}</dd>
           </div>
         </dl>
 
-        <p className="text-sm text-ink-muted">This will recalculate the portfolio.</p>
+        <p className="text-sm text-ink-muted">{t('purchase.deleteWarning')}</p>
 
         <div className="flex gap-3">
           <Button type="button" variant="secondary" className="flex-1" onClick={onClose}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             type="button"
@@ -77,7 +82,7 @@ export function DeleteTransactionDialog({
             pending={remove.isPending}
             onClick={handleDelete}
           >
-            Delete
+            {t('common.delete')}
           </Button>
         </div>
       </div>

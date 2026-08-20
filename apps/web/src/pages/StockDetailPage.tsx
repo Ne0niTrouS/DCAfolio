@@ -1,38 +1,36 @@
 import { pricePerShare } from '@dcafolio/calculation';
-import {
-  UNAVAILABLE,
-  formatDate,
-  formatMoney,
-  formatRelativeTime,
-  formatShares,
-} from '@dcafolio/shared';
+import { UNAVAILABLE, formatDate, formatMoney, formatShares } from '@dcafolio/shared';
 import { Link, useParams } from 'react-router-dom';
 
 import { SignedMoney, SignedPercent } from '@/components/SignedValue';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { usePortfolio } from '@/features/portfolio/use-portfolio';
+import { useT } from '@/i18n/use-language';
+import { useRelativeTime } from '@/i18n/use-relative-time';
 import { mapDataError } from '@/lib/errors';
 
 function Figure({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-border-subtle bg-surface-raised px-4 py-3">
+    <div className="rounded-2xl border border-border-subtle bg-surface-raised px-4 py-3.5 shadow-sm">
       <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">{label}</p>
-      <p className="mt-1 text-lg font-semibold">{children}</p>
+      <p className="mt-1.5 text-lg font-semibold tracking-tight">{children}</p>
     </div>
   );
 }
 
 export function StockDetailPage() {
   const { symbol = '' } = useParams<{ symbol: string }>();
+  const t = useT();
+  const relative = useRelativeTime();
   const { portfolio, transactions, isLoading, error, refetch } = usePortfolio();
 
-  if (isLoading) return <LoadingState label={`Loading ${symbol}…`} />;
+  if (isLoading) return <LoadingState label={t('stock.loading', { symbol })} />;
 
   if (error) {
     return (
       <ErrorState
-        title="Could not load this stock."
-        description={mapDataError(error)}
+        title={t('stock.loadError')}
+        description={t(mapDataError(error))}
         onRetry={() => void refetch()}
       />
     );
@@ -43,11 +41,11 @@ export function StockDetailPage() {
   if (!position) {
     return (
       <EmptyState
-        title={`No purchases recorded for ${symbol}.`}
-        description="Once you record a purchase of this stock it will appear here."
+        title={t('stock.emptyTitle', { symbol })}
+        description={t('stock.emptyBody')}
         action={
-          <Link to="/" className="text-sm text-accent hover:underline">
-            Back to the dashboard
+          <Link to="/" className="text-sm font-medium text-accent-strong hover:underline">
+            {t('common.backToDashboard')}
           </Link>
         }
       />
@@ -66,28 +64,28 @@ export function StockDetailPage() {
       </header>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Figure label="Shares">
+        <Figure label={t('stock.shares')}>
           <span className="tnum text-ink">{formatShares(position.totalShares)}</span>
         </Figure>
-        <Figure label="Total Invested">
+        <Figure label={t('stock.totalInvested')}>
           <span className="tnum text-ink">{formatMoney(position.totalInvested)}</span>
         </Figure>
-        <Figure label="Average Cost">
+        <Figure label={t('stock.averageCost')}>
           <span className="tnum text-ink">{formatMoney(position.averageCost)}</span>
         </Figure>
-        <Figure label="Current Price">
+        <Figure label={t('stock.currentPrice')}>
           <span className="tnum text-ink">{formatMoney(position.currentPrice)}</span>
         </Figure>
-        <Figure label="Current Value">
+        <Figure label={t('stock.currentValue')}>
           <span className="tnum text-ink">{formatMoney(position.currentValue)}</span>
         </Figure>
-        <Figure label="Profit/Loss">
+        <Figure label={t('stock.profitLoss')}>
           <SignedMoney value={position.profitLoss} />
         </Figure>
-        <Figure label="Return">
+        <Figure label={t('stock.return')}>
           <SignedPercent value={position.returnPercent} />
         </Figure>
-        <Figure label="Allocation">
+        <Figure label={t('stock.allocation')}>
           <span className="tnum text-ink">
             {position.allocationPercent === null
               ? UNAVAILABLE
@@ -96,32 +94,38 @@ export function StockDetailPage() {
         </Figure>
       </div>
 
-      <p className="text-xs text-ink-muted">
+      <p className="text-xs text-ink-faint">
         {position.priceStatus === 'missing'
-          ? 'No market price has been captured for this stock yet.'
-          : `Price from ${position.provider ?? UNAVAILABLE}, updated ${formatRelativeTime(
-              position.priceCapturedAt,
-            )}${position.priceStatus === 'stale' ? ' — cached, may be out of date' : ''}`}
+          ? t('stock.noPriceCaptured')
+          : t(position.priceStatus === 'stale' ? 'stock.priceFromCached' : 'stock.priceFrom', {
+              provider: position.provider ?? UNAVAILABLE,
+              time: relative(position.priceCapturedAt),
+            })}
       </p>
 
       <section aria-labelledby="purchase-history-heading">
-        <h2 id="purchase-history-heading" className="text-sm font-semibold text-ink">
-          Purchase history
+        <h2
+          id="purchase-history-heading"
+          className="text-sm font-semibold tracking-tight text-ink"
+        >
+          {t('stock.purchaseHistory')}
         </h2>
 
-        <ul className="mt-2 flex flex-col gap-2">
+        <ul className="mt-3 flex flex-col gap-2">
           {purchases.map((purchase) => (
             <li
               key={purchase.id}
-              className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 rounded-xl border border-border-subtle bg-surface-raised px-4 py-2.5 text-sm"
+              className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 rounded-2xl border border-border-subtle bg-surface-raised px-4 py-3 text-sm shadow-sm"
             >
               <span className="tnum text-ink-muted">{formatDate(purchase.purchaseDate)}</span>
               <span className="tnum text-ink">{formatMoney(purchase.investedAmount)}</span>
               <span className="tnum text-ink-muted">
-                {formatShares(purchase.shares)} shares
+                {formatShares(purchase.shares)} {t('common.sharesUnit')}
               </span>
               <span className="tnum text-ink-muted">
-                {formatMoney(pricePerShare(purchase.investedAmount, purchase.shares))}/share
+                {t('purchase.perShare', {
+                  value: formatMoney(pricePerShare(purchase.investedAmount, purchase.shares)),
+                })}
               </span>
             </li>
           ))}

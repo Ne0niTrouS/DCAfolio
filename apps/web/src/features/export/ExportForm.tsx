@@ -5,6 +5,8 @@ import { Alert } from '@/components/Alert';
 import { Button } from '@/components/Button';
 import { SelectField } from '@/components/SelectField';
 import { fetchTransactions } from '@/features/transactions/queries';
+import type { TranslationKey } from '@/i18n/en';
+import { useT } from '@/i18n/use-language';
 import { downloadBlob } from '@/lib/download';
 import { mapDataError } from '@/lib/errors';
 
@@ -12,26 +14,28 @@ import { csvBlob } from './csv';
 import { fileNameFor, filtersFor, type ExportSelection } from './export-filters';
 import { xlsxBlob } from './xlsx';
 
-const MONTHS = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-] as const;
+const MONTH_KEYS: TranslationKey[] = [
+  'export.month.1',
+  'export.month.2',
+  'export.month.3',
+  'export.month.4',
+  'export.month.5',
+  'export.month.6',
+  'export.month.7',
+  'export.month.8',
+  'export.month.9',
+  'export.month.10',
+  'export.month.11',
+  'export.month.12',
+];
 
 function yearOptions(currentYear: number): number[] {
   return Array.from({ length: 10 }, (_, offset) => currentYear - offset);
 }
 
 export function ExportForm({ stocks, currentYear }: { stocks: Stock[]; currentYear: number }) {
+  const t = useT();
+
   const [selection, setSelection] = useState<ExportSelection>({
     stockId: null,
     period: 'all',
@@ -40,7 +44,10 @@ export function ExportForm({ stocks, currentYear }: { stocks: Stock[]; currentYe
     format: 'xlsx',
   });
   const [pending, setPending] = useState(false);
-  const [message, setMessage] = useState<{ tone: 'error' | 'info'; text: string } | null>(null);
+  const [message, setMessage] = useState<{
+    tone: 'error' | 'info';
+    key: TranslationKey;
+  } | null>(null);
 
   function update(patch: Partial<ExportSelection>) {
     setSelection((current) => ({ ...current, ...patch }));
@@ -56,7 +63,7 @@ export function ExportForm({ stocks, currentYear }: { stocks: Stock[]; currentYe
       const transactions = await fetchTransactions(filtersFor(selection));
 
       if (transactions.length === 0) {
-        setMessage({ tone: 'info', text: 'No transactions match this selection.' });
+        setMessage({ tone: 'info', key: 'export.noMatches' });
         return;
       }
 
@@ -65,22 +72,22 @@ export function ExportForm({ stocks, currentYear }: { stocks: Stock[]; currentYe
 
       downloadBlob(blob, fileNameFor(selection, stocks));
     } catch (error) {
-      setMessage({ tone: 'error', text: mapDataError(error) });
+      setMessage({ tone: 'error', key: mapDataError(error) });
     } finally {
       setPending(false);
     }
   }
 
   return (
-    <div className="flex max-w-md flex-col gap-4">
-      {message ? <Alert tone={message.tone}>{message.text}</Alert> : null}
+    <div className="flex flex-col gap-4">
+      {message ? <Alert tone={message.tone}>{t(message.key)}</Alert> : null}
 
       <SelectField
-        label="Stock"
+        label={t('export.stock')}
         value={selection.stockId ?? ''}
         onChange={(event) => update({ stockId: event.target.value || null })}
       >
-        <option value="">All Stocks</option>
+        <option value="">{t('export.allStocks')}</option>
         {stocks.map((stock) => (
           <option key={stock.id} value={stock.id}>
             {stock.symbol}
@@ -89,20 +96,20 @@ export function ExportForm({ stocks, currentYear }: { stocks: Stock[]; currentYe
       </SelectField>
 
       <SelectField
-        label="Period"
+        label={t('export.period')}
         value={selection.period}
         onChange={(event) =>
           update({ period: event.target.value as ExportSelection['period'] })
         }
       >
-        <option value="all">All time</option>
-        <option value="monthly">Monthly</option>
-        <option value="yearly">Yearly</option>
+        <option value="all">{t('export.allTime')}</option>
+        <option value="monthly">{t('export.monthly')}</option>
+        <option value="yearly">{t('export.yearly')}</option>
       </SelectField>
 
       {selection.period !== 'all' ? (
         <SelectField
-          label="Year"
+          label={t('export.year')}
           value={String(selection.year ?? currentYear)}
           onChange={(event) => update({ year: Number(event.target.value) })}
         >
@@ -116,20 +123,20 @@ export function ExportForm({ stocks, currentYear }: { stocks: Stock[]; currentYe
 
       {selection.period === 'monthly' ? (
         <SelectField
-          label="Month"
+          label={t('export.month')}
           value={String(selection.month ?? 1)}
           onChange={(event) => update({ month: Number(event.target.value) })}
         >
-          {MONTHS.map((name, index) => (
-            <option key={name} value={index + 1}>
-              {name}
+          {MONTH_KEYS.map((key, index) => (
+            <option key={key} value={index + 1}>
+              {t(key)}
             </option>
           ))}
         </SelectField>
       ) : null}
 
       <SelectField
-        label="Format"
+        label={t('export.format')}
         value={selection.format}
         onChange={(event) =>
           update({ format: event.target.value as ExportSelection['format'] })
@@ -140,7 +147,7 @@ export function ExportForm({ stocks, currentYear }: { stocks: Stock[]; currentYe
       </SelectField>
 
       <Button onClick={handleExport} pending={pending} className="mt-2">
-        Export
+        {t('export.export')}
       </Button>
     </div>
   );

@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createAuthValue, renderWithAuth } from '@/test/auth-harness';
+import { phrase } from '@/test/i18n-harness';
 
 type Filter = { method: string; args: unknown[] };
 
@@ -123,12 +124,12 @@ describe('HistoryPage', () => {
       .map((header) => header.textContent);
 
     expect(headers).toEqual([
-      'Date',
-      'Stock',
-      'Invested Amount',
-      'Shares',
-      'Price/Share',
-      'Actions',
+      phrase('history.date'),
+      phrase('history.stock'),
+      phrase('history.investedAmount'),
+      phrase('history.shares'),
+      phrase('history.pricePerShare'),
+      phrase('history.actions'),
     ]);
   });
 
@@ -143,7 +144,7 @@ describe('HistoryPage', () => {
     render();
     await screen.findByRole('table');
 
-    await userEvent.type(screen.getByLabelText('Search'), 'cpall');
+    await userEvent.type(screen.getByLabelText(phrase('history.search')), 'cpall');
 
     await waitFor(() => {
       expect(within(screen.getByRole('table')).queryByText('PTT')).not.toBeInTheDocument();
@@ -155,7 +156,7 @@ describe('HistoryPage', () => {
     render();
     await screen.findByRole('table');
 
-    await userEvent.type(screen.getByLabelText('Search'), 'ปตท');
+    await userEvent.type(screen.getByLabelText(phrase('history.search')), 'ปตท');
 
     await waitFor(() => {
       expect(within(screen.getByRole('table')).queryByText('CPALL')).not.toBeInTheDocument();
@@ -167,7 +168,10 @@ describe('HistoryPage', () => {
     render();
     await screen.findByRole('table');
 
-    await userEvent.selectOptions(screen.getByLabelText('Stock'), 'stock-cpall');
+    await userEvent.selectOptions(
+      screen.getByLabelText(phrase('history.stock')),
+      'stock-cpall',
+    );
 
     await waitFor(() => {
       expect(state.lastFilters).toContainEqual({
@@ -176,7 +180,7 @@ describe('HistoryPage', () => {
       });
     });
 
-    await userEvent.type(screen.getByLabelText('From'), '2026-08-01');
+    await userEvent.type(screen.getByLabelText(phrase('history.from')), '2026-08-01');
     await waitFor(() => {
       expect(state.lastFilters).toContainEqual({
         method: 'gte',
@@ -189,11 +193,13 @@ describe('HistoryPage', () => {
     render();
     await screen.findByRole('table');
 
-    await userEvent.type(screen.getByLabelText('Search'), 'zzzz');
+    await userEvent.type(screen.getByLabelText(phrase('history.search')), 'zzzz');
 
-    expect(await screen.findByText('No transactions match these filters.')).toBeInTheDocument();
+    expect(await screen.findByText(phrase('history.noMatches'))).toBeInTheDocument();
 
-    await userEvent.click(screen.getAllByRole('button', { name: 'Clear filters' })[0]!);
+    await userEvent.click(
+      screen.getAllByRole('button', { name: phrase('history.clearFilters') })[0]!,
+    );
 
     expect(await screen.findByRole('table')).toBeInTheDocument();
   });
@@ -202,44 +208,52 @@ describe('HistoryPage', () => {
     state.transactions = [];
     render();
 
-    expect(await screen.findByText('No transactions yet.')).toBeInTheDocument();
+    expect(await screen.findByText(phrase('history.emptyTitle'))).toBeInTheDocument();
   });
 
   it('reports a load failure with a retry', async () => {
     state.error = new Error('permission denied for table transactions');
     render();
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Could not load your transactions.',
-    );
-    expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
+    expect(await screen.findByRole('alert')).toHaveTextContent(phrase('history.loadError'));
+    expect(screen.getByRole('button', { name: phrase('common.tryAgain') })).toBeInTheDocument();
   });
 
   it('opens the edit dialog pre-filled from the row', async () => {
     render();
     const table = await screen.findByRole('table');
 
-    await userEvent.click(within(table).getByRole('button', { name: /Edit CPALL/ }));
+    await userEvent.click(
+      within(table).getByRole('button', {
+        name: phrase('history.editRow', { symbol: 'CPALL', date: '09/08/2026' }),
+      }),
+    );
 
     const dialog = await screen.findByRole('dialog');
-    expect(dialog).toHaveAccessibleName('Edit Purchase');
-    expect(within(dialog).getByLabelText('Invested Amount')).toHaveValue('12500.00');
+    expect(dialog).toHaveAccessibleName(phrase('purchase.editTitle'));
+    expect(within(dialog).getByLabelText(phrase('purchase.investedAmount'))).toHaveValue(
+      '12500.00',
+    );
   });
 
   it('confirms before deleting', async () => {
     render();
     const table = await screen.findByRole('table');
 
-    await userEvent.click(within(table).getByRole('button', { name: /Delete CPALL/ }));
+    await userEvent.click(
+      within(table).getByRole('button', {
+        name: phrase('history.deleteRow', { symbol: 'CPALL', date: '09/08/2026' }),
+      }),
+    );
 
     const dialog = await screen.findByRole('dialog');
-    expect(dialog).toHaveAccessibleName('Delete Transaction?');
-    expect(
-      within(dialog).getByText('This will recalculate the portfolio.'),
-    ).toBeInTheDocument();
+    expect(dialog).toHaveAccessibleName(phrase('purchase.deleteTitle'));
+    expect(within(dialog).getByText(phrase('purchase.deleteWarning'))).toBeInTheDocument();
     expect(state.operations).not.toContain('delete');
 
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete' }));
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: phrase('common.delete') }),
+    );
 
     await waitFor(() => expect(state.operations).toContain('delete'));
   });

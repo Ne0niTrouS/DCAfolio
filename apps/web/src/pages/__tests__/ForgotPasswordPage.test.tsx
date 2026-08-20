@@ -5,14 +5,21 @@ import { describe, expect, it, vi } from 'vitest';
 import { ForgotPasswordPage } from '@/pages/ForgotPasswordPage';
 import { ResetPasswordPage } from '@/pages/ResetPasswordPage';
 import { createAuthValue, renderWithAuth } from '@/test/auth-harness';
+import { phrase } from '@/test/i18n-harness';
+
+const EMAIL = phrase('auth.email');
+const SEND_RESET = phrase('auth.sendResetLink');
+const NEW_PASSWORD = phrase('auth.newPassword');
+const CONFIRM_PASSWORD = phrase('auth.confirmNewPassword');
+const UPDATE_PASSWORD = phrase('auth.updatePassword');
 
 describe('ForgotPasswordPage', () => {
   it('requests a reset link for a valid address', async () => {
     const auth = createAuthValue();
     renderWithAuth(<ForgotPasswordPage />, { auth });
 
-    await userEvent.type(screen.getByLabelText('Email'), 'owner@example.com');
-    await userEvent.click(screen.getByRole('button', { name: 'Send reset link' }));
+    await userEvent.type(screen.getByLabelText(EMAIL), 'owner@example.com');
+    await userEvent.click(screen.getByRole('button', { name: SEND_RESET }));
 
     expect(auth.requestPasswordReset).toHaveBeenCalledWith('owner@example.com');
   });
@@ -20,22 +27,20 @@ describe('ForgotPasswordPage', () => {
   it('confirms neutrally so it never discloses whether an account exists', async () => {
     renderWithAuth(<ForgotPasswordPage />);
 
-    await userEvent.type(screen.getByLabelText('Email'), 'stranger@example.com');
-    await userEvent.click(screen.getByRole('button', { name: 'Send reset link' }));
+    await userEvent.type(screen.getByLabelText(EMAIL), 'stranger@example.com');
+    await userEvent.click(screen.getByRole('button', { name: SEND_RESET }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'If an account exists for that address, a reset link has been sent.',
-    );
+    expect(await screen.findByRole('alert')).toHaveTextContent(phrase('auth.resetSent'));
   });
 
   it('rejects an invalid address without calling Supabase', async () => {
     const auth = createAuthValue();
     renderWithAuth(<ForgotPasswordPage />, { auth });
 
-    await userEvent.type(screen.getByLabelText('Email'), 'nope');
-    await userEvent.click(screen.getByRole('button', { name: 'Send reset link' }));
+    await userEvent.type(screen.getByLabelText(EMAIL), 'nope');
+    await userEvent.click(screen.getByRole('button', { name: SEND_RESET }));
 
-    expect(screen.getByText('Enter a valid email address.')).toBeInTheDocument();
+    expect(screen.getByText(phrase('auth.invalidEmail'))).toBeInTheDocument();
     expect(auth.requestPasswordReset).not.toHaveBeenCalled();
   });
 });
@@ -45,11 +50,11 @@ describe('ResetPasswordPage', () => {
     const auth = createAuthValue();
     renderWithAuth(<ResetPasswordPage />, { auth });
 
-    await userEvent.type(screen.getByLabelText('New password'), 'short');
-    await userEvent.type(screen.getByLabelText('Confirm new password'), 'short');
-    await userEvent.click(screen.getByRole('button', { name: 'Update password' }));
+    await userEvent.type(screen.getByLabelText(NEW_PASSWORD), 'short');
+    await userEvent.type(screen.getByLabelText(CONFIRM_PASSWORD), 'short');
+    await userEvent.click(screen.getByRole('button', { name: UPDATE_PASSWORD }));
 
-    expect(screen.getByText('Use at least 8 characters.')).toBeInTheDocument();
+    expect(screen.getByText(phrase('auth.passwordTooShort', { count: 8 }))).toBeInTheDocument();
     expect(auth.updatePassword).not.toHaveBeenCalled();
   });
 
@@ -57,11 +62,11 @@ describe('ResetPasswordPage', () => {
     const auth = createAuthValue();
     renderWithAuth(<ResetPasswordPage />, { auth });
 
-    await userEvent.type(screen.getByLabelText('New password'), 'correct horse');
-    await userEvent.type(screen.getByLabelText('Confirm new password'), 'battery staple');
-    await userEvent.click(screen.getByRole('button', { name: 'Update password' }));
+    await userEvent.type(screen.getByLabelText(NEW_PASSWORD), 'correct horse');
+    await userEvent.type(screen.getByLabelText(CONFIRM_PASSWORD), 'battery staple');
+    await userEvent.click(screen.getByRole('button', { name: UPDATE_PASSWORD }));
 
-    expect(screen.getByText('Passwords do not match.')).toBeInTheDocument();
+    expect(screen.getByText(phrase('auth.passwordsDoNotMatch'))).toBeInTheDocument();
     expect(auth.updatePassword).not.toHaveBeenCalled();
   });
 
@@ -69,9 +74,9 @@ describe('ResetPasswordPage', () => {
     const auth = createAuthValue();
     renderWithAuth(<ResetPasswordPage />, { auth });
 
-    await userEvent.type(screen.getByLabelText('New password'), 'correct horse');
-    await userEvent.type(screen.getByLabelText('Confirm new password'), 'correct horse');
-    await userEvent.click(screen.getByRole('button', { name: 'Update password' }));
+    await userEvent.type(screen.getByLabelText(NEW_PASSWORD), 'correct horse');
+    await userEvent.type(screen.getByLabelText(CONFIRM_PASSWORD), 'correct horse');
+    await userEvent.click(screen.getByRole('button', { name: UPDATE_PASSWORD }));
 
     expect(auth.updatePassword).toHaveBeenCalledWith('correct horse');
   });
@@ -84,12 +89,10 @@ describe('ResetPasswordPage', () => {
     });
     renderWithAuth(<ResetPasswordPage />, { auth });
 
-    await userEvent.type(screen.getByLabelText('New password'), 'correct horse');
-    await userEvent.type(screen.getByLabelText('Confirm new password'), 'correct horse');
-    await userEvent.click(screen.getByRole('button', { name: 'Update password' }));
+    await userEvent.type(screen.getByLabelText(NEW_PASSWORD), 'correct horse');
+    await userEvent.type(screen.getByLabelText(CONFIRM_PASSWORD), 'correct horse');
+    await userEvent.click(screen.getByRole('button', { name: UPDATE_PASSWORD }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'This link is no longer valid. Request a new password reset email.',
-    );
+    expect(await screen.findByRole('alert')).toHaveTextContent(phrase('error.linkExpired'));
   });
 });

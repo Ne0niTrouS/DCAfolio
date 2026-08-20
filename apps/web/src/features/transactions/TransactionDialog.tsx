@@ -2,6 +2,8 @@ import type { Stock, TransactionWithStock } from '@dcafolio/shared';
 import { useState } from 'react';
 
 import { Modal } from '@/components/Modal';
+import type { TranslationKey } from '@/i18n/en';
+import { useT } from '@/i18n/use-language';
 import { mapDataError } from '@/lib/errors';
 
 import { TransactionForm, type TransactionFormValues } from './TransactionForm';
@@ -21,9 +23,10 @@ export function TransactionDialog({
   today,
   onClose,
 }: TransactionDialogProps) {
+  const t = useT();
   const create = useCreateTransaction();
   const update = useUpdateTransaction();
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<TranslationKey | null>(null);
 
   const isEdit = transaction !== undefined;
 
@@ -39,11 +42,11 @@ export function TransactionDialog({
   }
 
   return (
-    <Modal title={isEdit ? 'Edit Purchase' : 'Add Purchase'} onClose={onClose}>
+    <Modal title={t(isEdit ? 'purchase.editTitle' : 'purchase.addTitle')} onClose={onClose}>
       <TransactionForm
         stocks={stocks}
         today={today}
-        submitLabel={isEdit ? 'Save' : 'Add Purchase'}
+        submitLabel={t(isEdit ? 'common.save' : 'common.addPurchase')}
         pending={create.isPending || update.isPending}
         error={error}
         onSubmit={handleSubmit}

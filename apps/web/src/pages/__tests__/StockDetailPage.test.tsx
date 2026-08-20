@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Route, Routes } from 'react-router-dom';
 
 import { createAuthValue, renderWithAuth } from '@/test/auth-harness';
+import { phrase } from '@/test/i18n-harness';
 
 const state = vi.hoisted(() => ({
   transactions: [] as unknown[],
@@ -105,22 +106,30 @@ describe('StockDetailPage', () => {
   it('lists the purchase history with a derived price per share', async () => {
     render('CPALL');
 
-    expect(await screen.findByText('Purchase history')).toBeInTheDocument();
+    expect(await screen.findByText(phrase('stock.purchaseHistory'))).toBeInTheDocument();
     expect(screen.getByText('09/06/2026')).toBeInTheDocument();
     expect(screen.getByText('09/07/2026')).toBeInTheDocument();
-    expect(screen.getAllByText('฿62.80/share')).toHaveLength(2);
+    expect(screen.getAllByText(phrase('purchase.perShare', { value: '฿62.80' }))).toHaveLength(
+      2,
+    );
   });
 
   it('names the provider and how old the price is', async () => {
     render('CPALL');
 
-    expect(await screen.findByText(/Price from mock, updated just now/)).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        phrase('stock.priceFrom', { provider: 'mock', time: phrase('time.justNow') }),
+      ),
+    ).toBeInTheDocument();
   });
 
   it('says so plainly when no purchase of that stock exists', async () => {
     render('PTT');
 
-    expect(await screen.findByText('No purchases recorded for PTT.')).toBeInTheDocument();
+    expect(
+      await screen.findByText(phrase('stock.emptyTitle', { symbol: 'PTT' })),
+    ).toBeInTheDocument();
   });
 
   it('still shows cost figures when there is no price', async () => {
@@ -128,8 +137,6 @@ describe('StockDetailPage', () => {
     render('CPALL');
 
     expect(await screen.findByText('฿62.80')).toBeInTheDocument();
-    expect(
-      screen.getByText('No market price has been captured for this stock yet.'),
-    ).toBeInTheDocument();
+    expect(screen.getByText(phrase('stock.noPriceCaptured'))).toBeInTheDocument();
   });
 });

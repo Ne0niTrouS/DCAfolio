@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { renderWithQuery } from '@/test/query-harness';
 import { createSupabaseMock, type RecordedCall } from '@/test/supabase-mock';
+import { phrase } from '@/test/i18n-harness';
 
 const state = vi.hoisted(() => ({
   mock: null as ReturnType<typeof createSupabaseMock> | null,
@@ -56,12 +57,15 @@ describe('TransactionDialog', () => {
     const onClose = vi.fn();
     renderWithQuery(<TransactionDialog stocks={STOCKS} today={TODAY} onClose={onClose} />);
 
-    expect(screen.getByRole('dialog')).toHaveAccessibleName('Add Purchase');
+    expect(screen.getByRole('dialog')).toHaveAccessibleName(phrase('purchase.addTitle'));
 
-    await userEvent.selectOptions(screen.getByLabelText('Stock'), 'stock-cpall');
-    await userEvent.type(screen.getByLabelText('Invested Amount'), '12500');
-    await userEvent.type(screen.getByLabelText('Shares Received'), '200');
-    await userEvent.click(screen.getByRole('button', { name: 'Add Purchase' }));
+    await userEvent.selectOptions(
+      screen.getByLabelText(phrase('purchase.stock')),
+      'stock-cpall',
+    );
+    await userEvent.type(screen.getByLabelText(phrase('purchase.investedAmount')), '12500');
+    await userEvent.type(screen.getByLabelText(phrase('purchase.sharesReceived')), '200');
+    await userEvent.click(screen.getByRole('button', { name: phrase('common.addPurchase') }));
 
     await waitFor(() => expect(onClose).toHaveBeenCalled());
     expect(lastCall(state.mock!.calls)?.operation).toBe('insert');
@@ -78,12 +82,12 @@ describe('TransactionDialog', () => {
       />,
     );
 
-    expect(screen.getByRole('dialog')).toHaveAccessibleName('Edit Purchase');
+    expect(screen.getByRole('dialog')).toHaveAccessibleName(phrase('purchase.editTitle'));
 
-    const amount = screen.getByLabelText('Invested Amount');
+    const amount = screen.getByLabelText(phrase('purchase.investedAmount'));
     await userEvent.clear(amount);
     await userEvent.type(amount, '13000');
-    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await userEvent.click(screen.getByRole('button', { name: phrase('common.save') }));
 
     await waitFor(() => expect(onClose).toHaveBeenCalled());
     const call = lastCall(state.mock!.calls);
@@ -102,13 +106,16 @@ describe('TransactionDialog', () => {
     const onClose = vi.fn();
     renderWithQuery(<TransactionDialog stocks={STOCKS} today={TODAY} onClose={onClose} />);
 
-    await userEvent.selectOptions(screen.getByLabelText('Stock'), 'stock-cpall');
-    await userEvent.type(screen.getByLabelText('Invested Amount'), '12500');
-    await userEvent.type(screen.getByLabelText('Shares Received'), '200');
-    await userEvent.click(screen.getByRole('button', { name: 'Add Purchase' }));
+    await userEvent.selectOptions(
+      screen.getByLabelText(phrase('purchase.stock')),
+      'stock-cpall',
+    );
+    await userEvent.type(screen.getByLabelText(phrase('purchase.investedAmount')), '12500');
+    await userEvent.type(screen.getByLabelText(phrase('purchase.sharesReceived')), '200');
+    await userEvent.click(screen.getByRole('button', { name: phrase('common.addPurchase') }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Invested amount must be greater than 0.',
+      phrase('error.investedAmountPositive'),
     );
     expect(onClose).not.toHaveBeenCalled();
   });
@@ -127,20 +134,20 @@ describe('DeleteTransactionDialog', () => {
   it('shows exactly what will be deleted and warns about recalculation', () => {
     renderWithQuery(<DeleteTransactionDialog transaction={TRANSACTION} onClose={vi.fn()} />);
 
-    expect(screen.getByRole('dialog')).toHaveAccessibleName('Delete Transaction?');
+    expect(screen.getByRole('dialog')).toHaveAccessibleName(phrase('purchase.deleteTitle'));
     expect(screen.getByText('CPALL')).toBeInTheDocument();
     expect(screen.getByText('09/08/2026')).toBeInTheDocument();
     expect(screen.getByText('฿12,500.00')).toBeInTheDocument();
-    expect(screen.getByText('200 shares')).toBeInTheDocument();
+    expect(screen.getByText(`200 ${phrase('common.sharesUnit')}`)).toBeInTheDocument();
     expect(screen.getByText('฿62.50')).toBeInTheDocument();
-    expect(screen.getByText('This will recalculate the portfolio.')).toBeInTheDocument();
+    expect(screen.getByText(phrase('purchase.deleteWarning'))).toBeInTheDocument();
   });
 
   it('does nothing when cancelled', async () => {
     const onClose = vi.fn();
     renderWithQuery(<DeleteTransactionDialog transaction={TRANSACTION} onClose={onClose} />);
 
-    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    await userEvent.click(screen.getByRole('button', { name: phrase('common.cancel') }));
 
     expect(onClose).toHaveBeenCalled();
     expect(state.mock!.calls).toHaveLength(0);
@@ -150,7 +157,7 @@ describe('DeleteTransactionDialog', () => {
     const onClose = vi.fn();
     renderWithQuery(<DeleteTransactionDialog transaction={TRANSACTION} onClose={onClose} />);
 
-    await userEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    await userEvent.click(screen.getByRole('button', { name: phrase('common.delete') }));
 
     await waitFor(() => expect(onClose).toHaveBeenCalled());
     const call = lastCall(state.mock!.calls);
@@ -165,11 +172,9 @@ describe('DeleteTransactionDialog', () => {
     const onClose = vi.fn();
     renderWithQuery(<DeleteTransactionDialog transaction={TRANSACTION} onClose={onClose} />);
 
-    await userEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    await userEvent.click(screen.getByRole('button', { name: phrase('common.delete') }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'You do not have access to that record.',
-    );
+    expect(await screen.findByRole('alert')).toHaveTextContent(phrase('error.forbidden'));
     expect(onClose).not.toHaveBeenCalled();
   });
 });

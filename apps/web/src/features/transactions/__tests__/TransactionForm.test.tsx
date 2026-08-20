@@ -3,6 +3,8 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
+import { phrase } from '@/test/i18n-harness';
+
 import { TransactionForm } from '../TransactionForm';
 
 const TODAY = '2026-08-20';
@@ -31,7 +33,7 @@ function setup(props: Partial<Parameters<typeof TransactionForm>[0]> = {}) {
     <TransactionForm
       stocks={STOCKS}
       today={TODAY}
-      submitLabel="Add Purchase"
+      submitLabel={phrase('common.addPurchase')}
       onSubmit={onSubmit}
       onCancel={onCancel}
       {...props}
@@ -44,10 +46,10 @@ describe('TransactionForm', () => {
   it('asks only for what actually happened', () => {
     setup();
 
-    expect(screen.getByLabelText('Purchase Date')).toBeInTheDocument();
-    expect(screen.getByLabelText('Stock')).toBeInTheDocument();
-    expect(screen.getByLabelText('Invested Amount')).toBeInTheDocument();
-    expect(screen.getByLabelText('Shares Received')).toBeInTheDocument();
+    expect(screen.getByLabelText(phrase('purchase.purchaseDate'))).toBeInTheDocument();
+    expect(screen.getByLabelText(phrase('purchase.stock'))).toBeInTheDocument();
+    expect(screen.getByLabelText(phrase('purchase.investedAmount'))).toBeInTheDocument();
+    expect(screen.getByLabelText(phrase('purchase.sharesReceived'))).toBeInTheDocument();
     // The user is never asked to type the purchase price.
     expect(screen.queryByLabelText(/price/i)).not.toBeInTheDocument();
   });
@@ -57,17 +59,19 @@ describe('TransactionForm', () => {
 
     expect(screen.getByText('—')).toBeInTheDocument();
 
-    await userEvent.type(screen.getByLabelText('Invested Amount'), '12500');
-    await userEvent.type(screen.getByLabelText('Shares Received'), '200');
+    await userEvent.type(screen.getByLabelText(phrase('purchase.investedAmount')), '12500');
+    await userEvent.type(screen.getByLabelText(phrase('purchase.sharesReceived')), '200');
 
-    expect(screen.getByText('฿62.50/share')).toBeInTheDocument();
+    expect(
+      screen.getByText(phrase('purchase.perShare', { value: '฿62.50' })),
+    ).toBeInTheDocument();
   });
 
   it('shows no derived price until both fields are usable', async () => {
     setup();
 
-    await userEvent.type(screen.getByLabelText('Invested Amount'), '12500');
-    await userEvent.type(screen.getByLabelText('Shares Received'), '0');
+    await userEvent.type(screen.getByLabelText(phrase('purchase.investedAmount')), '12500');
+    await userEvent.type(screen.getByLabelText(phrase('purchase.sharesReceived')), '0');
 
     expect(screen.getByText('—')).toBeInTheDocument();
   });
@@ -75,39 +79,45 @@ describe('TransactionForm', () => {
   it('defaults the purchase date to today and refuses a future one', async () => {
     const { onSubmit } = setup();
 
-    const date = screen.getByLabelText('Purchase Date');
+    const date = screen.getByLabelText(phrase('purchase.purchaseDate'));
     expect(date).toHaveValue(TODAY);
     expect(date).toHaveAttribute('max', TODAY);
 
     await userEvent.clear(date);
     await userEvent.type(date, '2026-08-21');
-    await userEvent.selectOptions(screen.getByLabelText('Stock'), 'stock-cpall');
-    await userEvent.type(screen.getByLabelText('Invested Amount'), '12500');
-    await userEvent.type(screen.getByLabelText('Shares Received'), '200');
-    await userEvent.click(screen.getByRole('button', { name: 'Add Purchase' }));
+    await userEvent.selectOptions(
+      screen.getByLabelText(phrase('purchase.stock')),
+      'stock-cpall',
+    );
+    await userEvent.type(screen.getByLabelText(phrase('purchase.investedAmount')), '12500');
+    await userEvent.type(screen.getByLabelText(phrase('purchase.sharesReceived')), '200');
+    await userEvent.click(screen.getByRole('button', { name: phrase('common.addPurchase') }));
 
-    expect(screen.getByText('Purchase date cannot be in the future.')).toBeInTheDocument();
+    expect(screen.getByText(phrase('validation.futureDate'))).toBeInTheDocument();
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
   it('blocks submission until every field is valid', async () => {
     const { onSubmit } = setup();
 
-    await userEvent.click(screen.getByRole('button', { name: 'Add Purchase' }));
+    await userEvent.click(screen.getByRole('button', { name: phrase('common.addPurchase') }));
 
-    expect(screen.getByText('Select a stock.')).toBeInTheDocument();
-    expect(screen.getByText('Enter the amount invested.')).toBeInTheDocument();
-    expect(screen.getByText('Enter the number of shares received.')).toBeInTheDocument();
+    expect(screen.getByText(phrase('validation.selectStock'))).toBeInTheDocument();
+    expect(screen.getByText(phrase('validation.investedAmountRequired'))).toBeInTheDocument();
+    expect(screen.getByText(phrase('validation.sharesRequired'))).toBeInTheDocument();
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
   it('submits a complete purchase', async () => {
     const { onSubmit } = setup();
 
-    await userEvent.selectOptions(screen.getByLabelText('Stock'), 'stock-cpall');
-    await userEvent.type(screen.getByLabelText('Invested Amount'), '12500');
-    await userEvent.type(screen.getByLabelText('Shares Received'), '200');
-    await userEvent.click(screen.getByRole('button', { name: 'Add Purchase' }));
+    await userEvent.selectOptions(
+      screen.getByLabelText(phrase('purchase.stock')),
+      'stock-cpall',
+    );
+    await userEvent.type(screen.getByLabelText(phrase('purchase.investedAmount')), '12500');
+    await userEvent.type(screen.getByLabelText(phrase('purchase.sharesReceived')), '200');
+    await userEvent.click(screen.getByRole('button', { name: phrase('common.addPurchase') }));
 
     expect(onSubmit).toHaveBeenCalledWith({
       purchaseDate: TODAY,
@@ -128,25 +138,27 @@ describe('TransactionForm', () => {
       },
     });
 
-    expect(screen.getByLabelText('Purchase Date')).toHaveValue('2026-06-09');
-    expect(screen.getByLabelText('Stock')).toHaveValue('stock-ptt');
-    expect(screen.getByLabelText('Invested Amount')).toHaveValue('20000');
-    expect(screen.getByLabelText('Shares Received')).toHaveValue('600');
-    expect(screen.getByText('฿33.33/share')).toBeInTheDocument();
+    expect(screen.getByLabelText(phrase('purchase.purchaseDate'))).toHaveValue('2026-06-09');
+    expect(screen.getByLabelText(phrase('purchase.stock'))).toHaveValue('stock-ptt');
+    expect(screen.getByLabelText(phrase('purchase.investedAmount'))).toHaveValue('20000');
+    expect(screen.getByLabelText(phrase('purchase.sharesReceived'))).toHaveValue('600');
+    expect(
+      screen.getByText(phrase('purchase.perShare', { value: '฿33.33' })),
+    ).toBeInTheDocument();
   });
 
   it('cancels without submitting', async () => {
     const { onSubmit, onCancel } = setup();
 
-    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    await userEvent.click(screen.getByRole('button', { name: phrase('common.cancel') }));
 
     expect(onCancel).toHaveBeenCalled();
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
   it('shows a submission error above the form', () => {
-    setup({ error: 'Something went wrong. Please try again.' });
+    setup({ error: 'error.generic' });
 
-    expect(screen.getByRole('alert')).toHaveTextContent('Something went wrong.');
+    expect(screen.getByRole('alert')).toHaveTextContent(phrase('error.generic'));
   });
 });

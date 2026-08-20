@@ -1,13 +1,17 @@
 import type { ReactNode } from 'react';
 
+import { useT } from '@/i18n/use-language';
+
 import { Button } from './Button';
 
 /** Every major page handles loading, empty and error explicitly. */
 
-export function LoadingState({ label = 'Loading…' }: { label?: string }) {
+export function LoadingState({ label }: { label?: string }) {
+  const t = useT();
+
   return (
     <div role="status" aria-live="polite" className="flex flex-col gap-3">
-      <span className="sr-only">{label}</span>
+      <span className="sr-only">{label ?? t('common.loading')}</span>
       {[0, 1, 2].map((row) => (
         <div key={row} className="h-16 animate-pulse rounded-xl bg-surface-sunken" />
       ))}
@@ -25,16 +29,16 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-dashed border-border-subtle px-6 py-10 text-center">
-      <p className="text-base font-medium text-ink">{title}</p>
+    <div className="rounded-2xl border border-dashed border-border-subtle bg-surface-raised px-6 py-12 text-center">
+      <p className="text-base font-semibold text-ink">{title}</p>
       {description ? <p className="mt-1 text-sm text-ink-muted">{description}</p> : null}
-      {action ? <div className="mt-5 flex justify-center">{action}</div> : null}
+      {action ? <div className="mt-6 flex justify-center">{action}</div> : null}
     </div>
   );
 }
 
 export function ErrorState({
-  title = 'Something went wrong.',
+  title,
   description,
   onRetry,
 }: {
@@ -42,17 +46,19 @@ export function ErrorState({
   description?: string;
   onRetry?: () => void;
 }) {
+  const t = useT();
+
   return (
     <div
       role="alert"
-      className="rounded-xl border border-loss/40 bg-loss/5 px-6 py-8 text-center"
+      className="rounded-2xl border border-loss/30 bg-loss/5 px-6 py-8 text-center"
     >
-      <p className="text-base font-medium text-loss">{title}</p>
+      <p className="text-base font-semibold text-loss">{title ?? t('error.generic')}</p>
       {description ? <p className="mt-1 text-sm text-ink-muted">{description}</p> : null}
       {onRetry ? (
-        <div className="mt-5 flex justify-center">
+        <div className="mt-6 flex justify-center">
           <Button variant="secondary" onClick={onRetry}>
-            Try again
+            {t('common.tryAgain')}
           </Button>
         </div>
       ) : null}

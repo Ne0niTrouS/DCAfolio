@@ -55,18 +55,18 @@ export function Modal({ title, onClose, children }: ModalProps) {
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/30 md:items-center">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/50 backdrop-blur-sm md:items-center">
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="max-h-dvh w-full overflow-y-auto rounded-t-2xl bg-surface-raised p-5 md:max-w-md md:rounded-2xl"
+        className="max-h-dvh w-full overflow-y-auto rounded-t-2xl bg-surface-raised p-5 shadow-2xl md:max-w-md md:rounded-2xl md:p-6"
       >
-        <h2 id={titleId} className="text-lg font-semibold text-ink">
+        <h2 id={titleId} className="text-lg font-semibold tracking-tight text-ink">
           {title}
         </h2>
-        <div className="mt-4">{children}</div>
+        <div className="mt-5">{children}</div>
       </div>
     </div>
   );

@@ -1,5 +1,8 @@
 import { UNAVAILABLE, formatSignedMoney, formatSignedPercent } from '@dcafolio/shared';
 
+import type { TranslationKey } from '@/i18n/en';
+import { useT } from '@/i18n/use-language';
+
 /**
  * Profit and loss are never communicated by colour alone: the sign is always
  * present, and an assistive-technology label spells out "profit" or "loss".
@@ -12,10 +15,10 @@ function toneFor(value: number): string {
   return 'text-ink';
 }
 
-function labelFor(value: number): string {
-  if (value > 0) return 'profit';
-  if (value < 0) return 'loss';
-  return 'break-even';
+function labelKeyFor(value: number): TranslationKey {
+  if (value > 0) return 'value.profit';
+  if (value < 0) return 'value.loss';
+  return 'value.breakEven';
 }
 
 export function SignedMoney({
@@ -25,15 +28,17 @@ export function SignedMoney({
   value: string | null;
   className?: string;
 }) {
+  const t = useT();
+
   if (value === null) {
-    return <span className={`tnum text-ink-muted ${className}`}>{UNAVAILABLE}</span>;
+    return <span className={`tnum text-ink-faint ${className}`}>{UNAVAILABLE}</span>;
   }
 
   const numeric = Number(value);
   return (
     <span className={`tnum ${toneFor(numeric)} ${className}`}>
       {formatSignedMoney(value)}
-      <span className="sr-only"> ({labelFor(numeric)})</span>
+      <span className="sr-only"> ({t(labelKeyFor(numeric))})</span>
     </span>
   );
 }
@@ -46,7 +51,7 @@ export function SignedPercent({
   className?: string;
 }) {
   if (value === null) {
-    return <span className={`tnum text-ink-muted ${className}`}>{UNAVAILABLE}</span>;
+    return <span className={`tnum text-ink-faint ${className}`}>{UNAVAILABLE}</span>;
   }
 
   return (

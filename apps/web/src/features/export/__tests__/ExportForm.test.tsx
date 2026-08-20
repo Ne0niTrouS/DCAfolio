@@ -15,6 +15,8 @@ vi.mock('@/features/transactions/queries', () => ({
 vi.mock('@/lib/download', () => ({ downloadBlob: mocks.downloadBlob }));
 vi.mock('../xlsx', () => ({ xlsxBlob: mocks.xlsxBlob }));
 
+import { phrase } from '@/test/i18n-harness';
+
 const { ExportForm } = await import('../ExportForm');
 
 const CPALL: Stock = {
@@ -51,10 +53,12 @@ describe('ExportForm', () => {
   it('offers the four scopes and both formats', async () => {
     setup();
 
-    expect(screen.getByLabelText('Stock')).toBeInTheDocument();
-    expect(screen.getByLabelText('Period')).toBeInTheDocument();
-    expect(screen.getByLabelText('Format')).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: 'All Stocks' })).toBeInTheDocument();
+    expect(screen.getByLabelText(phrase('export.stock'))).toBeInTheDocument();
+    expect(screen.getByLabelText(phrase('export.period'))).toBeInTheDocument();
+    expect(screen.getByLabelText(phrase('export.format'))).toBeInTheDocument();
+    expect(
+      screen.getByRole('option', { name: phrase('export.allStocks') }),
+    ).toBeInTheDocument();
     expect(screen.getByRole('option', { name: 'XLSX' })).toBeInTheDocument();
     expect(screen.getByRole('option', { name: 'CSV' })).toBeInTheDocument();
   });
@@ -65,18 +69,18 @@ describe('ExportForm', () => {
     expect(screen.queryByLabelText('Year')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Month')).not.toBeInTheDocument();
 
-    await userEvent.selectOptions(screen.getByLabelText('Period'), 'yearly');
-    expect(screen.getByLabelText('Year')).toBeInTheDocument();
+    await userEvent.selectOptions(screen.getByLabelText(phrase('export.period')), 'yearly');
+    expect(screen.getByLabelText(phrase('export.year'))).toBeInTheDocument();
     expect(screen.queryByLabelText('Month')).not.toBeInTheDocument();
 
-    await userEvent.selectOptions(screen.getByLabelText('Period'), 'monthly');
-    expect(screen.getByLabelText('Month')).toBeInTheDocument();
+    await userEvent.selectOptions(screen.getByLabelText(phrase('export.period')), 'monthly');
+    expect(screen.getByLabelText(phrase('export.month'))).toBeInTheDocument();
   });
 
   it('exports all stocks over all time as XLSX by default', async () => {
     setup();
 
-    await userEvent.click(screen.getByRole('button', { name: 'Export' }));
+    await userEvent.click(screen.getByRole('button', { name: phrase('export.export') }));
 
     await waitFor(() => expect(mocks.downloadBlob).toHaveBeenCalled());
     expect(mocks.fetchTransactions).toHaveBeenCalledWith({
@@ -91,11 +95,11 @@ describe('ExportForm', () => {
   it('exports one stock for one month as CSV', async () => {
     setup();
 
-    await userEvent.selectOptions(screen.getByLabelText('Stock'), 'stock-cpall');
-    await userEvent.selectOptions(screen.getByLabelText('Period'), 'monthly');
-    await userEvent.selectOptions(screen.getByLabelText('Month'), '8');
-    await userEvent.selectOptions(screen.getByLabelText('Format'), 'csv');
-    await userEvent.click(screen.getByRole('button', { name: 'Export' }));
+    await userEvent.selectOptions(screen.getByLabelText(phrase('export.stock')), 'stock-cpall');
+    await userEvent.selectOptions(screen.getByLabelText(phrase('export.period')), 'monthly');
+    await userEvent.selectOptions(screen.getByLabelText(phrase('export.month')), '8');
+    await userEvent.selectOptions(screen.getByLabelText(phrase('export.format')), 'csv');
+    await userEvent.click(screen.getByRole('button', { name: phrase('export.export') }));
 
     await waitFor(() => expect(mocks.downloadBlob).toHaveBeenCalled());
     expect(mocks.fetchTransactions).toHaveBeenCalledWith({
@@ -110,8 +114,8 @@ describe('ExportForm', () => {
   it('exports a whole year', async () => {
     setup();
 
-    await userEvent.selectOptions(screen.getByLabelText('Period'), 'yearly');
-    await userEvent.click(screen.getByRole('button', { name: 'Export' }));
+    await userEvent.selectOptions(screen.getByLabelText(phrase('export.period')), 'yearly');
+    await userEvent.click(screen.getByRole('button', { name: phrase('export.export') }));
 
     await waitFor(() => expect(mocks.downloadBlob).toHaveBeenCalled());
     expect(mocks.fetchTransactions).toHaveBeenCalledWith({
@@ -125,11 +129,9 @@ describe('ExportForm', () => {
     mocks.fetchTransactions.mockResolvedValue([]);
     setup();
 
-    await userEvent.click(screen.getByRole('button', { name: 'Export' }));
+    await userEvent.click(screen.getByRole('button', { name: phrase('export.export') }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'No transactions match this selection.',
-    );
+    expect(await screen.findByRole('alert')).toHaveTextContent(phrase('export.noMatches'));
     expect(mocks.downloadBlob).not.toHaveBeenCalled();
   });
 
@@ -137,11 +139,9 @@ describe('ExportForm', () => {
     mocks.fetchTransactions.mockRejectedValue(new Error('permission denied for table'));
     setup();
 
-    await userEvent.click(screen.getByRole('button', { name: 'Export' }));
+    await userEvent.click(screen.getByRole('button', { name: phrase('export.export') }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'You do not have access to that record.',
-    );
+    expect(await screen.findByRole('alert')).toHaveTextContent(phrase('error.forbidden'));
     expect(mocks.downloadBlob).not.toHaveBeenCalled();
   });
 });

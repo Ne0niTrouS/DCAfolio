@@ -3,6 +3,7 @@ import type { Stock } from '@dcafolio/shared';
 import { Button } from '@/components/Button';
 import { SelectField } from '@/components/SelectField';
 import { TextField } from '@/components/TextField';
+import { useT } from '@/i18n/use-language';
 
 import type { HistoryFilters as Filters } from './use-transaction-history';
 
@@ -22,6 +23,8 @@ export function HistoryFilters({
   onChange,
   onClear,
 }: HistoryFiltersProps) {
+  const t = useT();
+
   function update(patch: Partial<Filters>) {
     onChange({ ...filters, ...patch });
   }
@@ -30,20 +33,20 @@ export function HistoryFilters({
     <div className="flex flex-col gap-3 md:flex-row md:items-end md:gap-4">
       <div className="md:flex-1">
         <TextField
-          label="Search"
+          label={t('history.search')}
           type="search"
-          placeholder="Symbol or Thai name"
+          placeholder={t('history.searchPlaceholder')}
           value={filters.search ?? ''}
           onChange={(event) => update({ search: event.target.value })}
         />
       </div>
 
       <SelectField
-        label="Stock"
+        label={t('history.stock')}
         value={filters.stockId ?? ''}
         onChange={(event) => update({ stockId: event.target.value || undefined })}
       >
-        <option value="">All stocks</option>
+        <option value="">{t('history.allStocks')}</option>
         {stocks.map((stock) => (
           <option key={stock.id} value={stock.id}>
             {stock.symbol}
@@ -52,14 +55,14 @@ export function HistoryFilters({
       </SelectField>
 
       <TextField
-        label="From"
+        label={t('history.from')}
         type="date"
         value={filters.from ?? ''}
         onChange={(event) => update({ from: event.target.value || undefined })}
       />
 
       <TextField
-        label="To"
+        label={t('history.to')}
         type="date"
         value={filters.to ?? ''}
         onChange={(event) => update({ to: event.target.value || undefined })}
@@ -67,7 +70,7 @@ export function HistoryFilters({
 
       {hasFilters ? (
         <Button variant="secondary" onClick={onClear}>
-          Clear filters
+          {t('history.clearFilters')}
         </Button>
       ) : null}
     </div>

@@ -5,6 +5,7 @@ import { Route, Routes } from 'react-router-dom';
 
 import { createAuthValue, renderWithAuth } from '@/test/auth-harness';
 import { createSupabaseMock } from '@/test/supabase-mock';
+import { phrase } from '@/test/i18n-harness';
 
 vi.mock('@/lib/supabase', () => ({ supabase: createSupabaseMock({ data: [] }).supabase }));
 
@@ -31,9 +32,15 @@ describe('AppShell', () => {
     expect(navigations).toHaveLength(2);
 
     for (const navigation of navigations) {
-      expect(within(navigation).getByRole('link', { name: 'Dashboard' })).toBeInTheDocument();
-      expect(within(navigation).getByRole('link', { name: 'History' })).toBeInTheDocument();
-      expect(within(navigation).getByRole('link', { name: 'Export' })).toBeInTheDocument();
+      expect(
+        within(navigation).getByRole('link', { name: phrase('common.dashboard') }),
+      ).toBeInTheDocument();
+      expect(
+        within(navigation).getByRole('link', { name: phrase('common.history') }),
+      ).toBeInTheDocument();
+      expect(
+        within(navigation).getByRole('link', { name: phrase('common.export') }),
+      ).toBeInTheDocument();
     }
   });
 
@@ -41,19 +48,18 @@ describe('AppShell', () => {
     render(['/history']);
 
     const [sidebar] = screen.getAllByRole('navigation', { name: 'Main' });
-    expect(within(sidebar!).getByRole('link', { name: 'History' })).toHaveAttribute(
-      'aria-current',
-      'page',
-    );
-    expect(within(sidebar!).getByRole('link', { name: 'Dashboard' })).not.toHaveAttribute(
-      'aria-current',
-    );
+    expect(
+      within(sidebar!).getByRole('link', { name: phrase('common.history') }),
+    ).toHaveAttribute('aria-current', 'page');
+    expect(
+      within(sidebar!).getByRole('link', { name: phrase('common.dashboard') }),
+    ).not.toHaveAttribute('aria-current');
   });
 
   it('lets a keyboard user skip the navigation', () => {
     render();
 
-    expect(screen.getByRole('link', { name: 'Skip to content' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: phrase('common.skipToContent') })).toHaveAttribute(
       'href',
       '#main',
     );
@@ -63,16 +69,16 @@ describe('AppShell', () => {
   it('reaches Add Purchase from any screen', async () => {
     render(['/export']);
 
-    const [addPurchase] = screen.getAllByRole('button', { name: 'Add Purchase' });
+    const [addPurchase] = screen.getAllByRole('button', { name: phrase('common.addPurchase') });
     await userEvent.click(addPurchase!);
 
-    expect(await screen.findByRole('dialog')).toHaveAccessibleName('Add Purchase');
+    expect(await screen.findByRole('dialog')).toHaveAccessibleName(phrase('purchase.addTitle'));
   });
 
   it('closes the add dialog on Escape without leaving the page', async () => {
     render();
 
-    const [addPurchase] = screen.getAllByRole('button', { name: 'Add Purchase' });
+    const [addPurchase] = screen.getAllByRole('button', { name: phrase('common.addPurchase') });
     await userEvent.click(addPurchase!);
     await screen.findByRole('dialog');
 
@@ -93,7 +99,7 @@ describe('AppShell', () => {
       { auth, initialEntries: ['/'] },
     );
 
-    const logoutButtons = screen.getAllByRole('button', { name: 'Logout' });
+    const logoutButtons = screen.getAllByRole('button', { name: phrase('common.logout') });
     expect(logoutButtons).toHaveLength(2);
 
     await userEvent.click(logoutButtons[0]!);
