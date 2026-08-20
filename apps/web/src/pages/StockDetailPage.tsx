@@ -59,7 +59,7 @@ export function StockDetailPage() {
   return (
     <section className="flex flex-col gap-5">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink">{position.symbol}</h1>
+        <h1 className="text-3xl font-semibold tracking-tight text-ink">{position.symbol}</h1>
         <p className="mt-1 text-sm text-ink-muted">{position.nameTh}</p>
       </header>
 

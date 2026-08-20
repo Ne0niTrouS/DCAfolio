@@ -9,7 +9,7 @@ export function ExportPage() {
   return (
     <section className="flex flex-col gap-5">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink">{t('export.title')}</h1>
+        <h1 className="text-3xl font-semibold tracking-tight text-ink">{t('export.title')}</h1>
         <p className="mt-1 text-sm text-ink-muted">
           {t('export.description')} {t('export.privacyNote')}
         </p>

@@ -3,21 +3,25 @@
 /*
  * DCAfolio design system.
  *
- * Dark navigation, light content, one green accent. Premium and calm rather
- * than a trading terminal: white cards on a cool grey page, soft shadows,
- * tabular numerals for every figure.
+ * A near-black brand surface for navigation and the signed-out screens, a light
+ * workspace for the data, white cards with soft shadows, and one green accent.
+ * Premium and calm rather than a trading terminal.
  */
 @theme {
   /* Accent — the only brand colour. */
   --color-accent: #16a34a;
+  --color-accent-bright: #22c55e;
   --color-accent-strong: #15803d;
   --color-accent-light: #dcfce7;
   --color-accent-subtle: #f0fdf4;
 
-  /* Navigation surfaces: sidebar, navbar, mobile bars, login background. */
-  --color-nav: #111827;
-  --color-nav-hover: #1f2937;
+  /* Brand surfaces: sidebar, navbar, and the signed-out background. */
+  --color-nav: #0f141a;
+  --color-nav-deep: #090c11;
+  --color-nav-hover: #1b222c;
   --color-nav-active: rgb(22 163 74 / 0.15);
+  --color-nav-card: #161b22;
+  --color-nav-border: rgb(255 255 255 / 0.08);
   --color-nav-ink: #e5e7eb;
   --color-nav-ink-muted: #94a3b8;
 
@@ -68,5 +72,16 @@
   :focus-visible {
     outline: 2px solid var(--color-accent);
     outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /*
+   * The faint dotted grid used as background texture on the signed-out screen.
+   * Decorative only — always behind `aria-hidden` scenery.
+   */
+  .dot-grid {
+    background-image: radial-gradient(circle, rgb(34 197 94 / 0.45) 1px, transparent 1px);
+    background-size: 26px 26px;
   }
 }

@@ -29,6 +29,8 @@ export const th: Dictionary = {
   'common.language': 'ภาษา',
   'common.account': 'บัญชีผู้ใช้',
   'common.sharesUnit': 'หุ้น',
+  'common.toggleNavigation': 'สลับเมนูนำทาง',
+  'common.footerTagline': 'ลงทุนสม่ำเสมอ เพื่ออนาคตที่เติบโต',
 
   // --- accessible labels for signed figures ---------------------------
   'value.profit': 'กำไร',
@@ -90,6 +92,7 @@ export const th: Dictionary = {
 
   // --- dashboard ------------------------------------------------------
   'dashboard.title': 'แดชบอร์ด',
+  'dashboard.welcome': 'ยินดีต้อนรับกลับ นี่คือภาพรวมพอร์ตของคุณ',
   'dashboard.portfolioValue': 'มูลค่าพอร์ต',
   'dashboard.totalInvested': 'เงินลงทุนทั้งหมด',
   'dashboard.profitLoss': 'กำไร/ขาดทุน',
@@ -103,6 +106,15 @@ export const th: Dictionary = {
   'dashboard.emptyBody': 'เพิ่มรายการซื้อหุ้นรายการแรกของคุณ',
   'dashboard.loadError': 'โหลดพอร์ตของคุณไม่สำเร็จ',
   'dashboard.loadingPortfolio': 'กำลังโหลดพอร์ตของคุณ…',
+  'dashboard.totalHoldings': 'มูลค่าถือครองรวม',
+  'dashboard.stockCount': '{count} ตัว',
+  'dashboard.investedOverTime': 'เงินลงทุนสะสมตามเวลา',
+  'dashboard.noChartData': 'ข้อมูลยังไม่พอสำหรับแสดงกราฟ',
+  'dashboard.summary': 'สรุป',
+  'dashboard.totalStocks': 'จำนวนหุ้น',
+  'dashboard.totalSharesLabel': 'จำนวนหุ้นรวม',
+  'dashboard.transactionCount': 'จำนวนรายการ',
+  'dashboard.ticker': 'ชื่อหุ้น',
 
   // --- market data ----------------------------------------------------
   'market.open': 'ตลาดเปิด',

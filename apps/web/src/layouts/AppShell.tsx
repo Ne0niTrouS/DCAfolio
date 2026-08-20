@@ -1,63 +1,34 @@
-import { APP_NAME, todayIsoDate } from '@dcafolio/shared';
-import { useState, type ReactNode } from 'react';
+import { APP_CREDIT, APP_NAME, todayIsoDate } from '@dcafolio/shared';
+import { useCallback, useRef, useState, type ComponentType } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 
+import { BrandMark, BrandWordmark } from '@/components/Brand';
 import { LanguageSelector } from '@/components/LanguageSelector';
+import {
+  ChevronDownIcon,
+  ClockIcon,
+  DownloadIcon,
+  HomeIcon,
+  LogoutIcon,
+  MenuIcon,
+  PlusIcon,
+} from '@/components/icons';
 import { mapAuthError } from '@/features/auth/auth-errors';
 import { useAuth } from '@/features/auth/use-auth';
 import { TransactionDialog } from '@/features/transactions/TransactionDialog';
 import { useStocks } from '@/features/transactions/queries';
 import type { TranslationKey } from '@/i18n/en';
 import { useLanguage } from '@/i18n/use-language';
+import { useDismiss } from '@/lib/use-dismiss';
 
-function DashboardIcon() {
-  return (
-    <svg viewBox="0 0 20 20" aria-hidden="true" className="size-5 shrink-0">
-      <path
-        d="M3 3h6v7H3zM11 3h6v4h-6zM11 10h6v7h-6zM3 13h6v4H3z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function HistoryIcon() {
-  return (
-    <svg viewBox="0 0 20 20" aria-hidden="true" className="size-5 shrink-0">
-      <circle cx="10" cy="10" r="7" fill="none" stroke="currentColor" strokeWidth="1.6" />
-      <path
-        d="M10 6v4.2l2.8 1.8"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function ExportIcon() {
-  return (
-    <svg viewBox="0 0 20 20" aria-hidden="true" className="size-5 shrink-0">
-      <path
-        d="M10 13V3m0 0L6.5 6.5M10 3l3.5 3.5M3.5 12.5v3a1.5 1.5 0 0 0 1.5 1.5h10a1.5 1.5 0 0 0 1.5-1.5v-3"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-const NAV_ITEMS: { to: string; key: TranslationKey; icon: () => ReactNode }[] = [
-  { to: '/', key: 'common.dashboard', icon: DashboardIcon },
-  { to: '/history', key: 'common.history', icon: HistoryIcon },
-  { to: '/export', key: 'common.export', icon: ExportIcon },
+const NAV_ITEMS: {
+  to: string;
+  key: TranslationKey;
+  icon: ComponentType<{ className?: string }>;
+}[] = [
+  { to: '/', key: 'common.dashboard', icon: HomeIcon },
+  { to: '/history', key: 'common.history', icon: ClockIcon },
+  { to: '/export', key: 'common.export', icon: DownloadIcon },
 ];
 
 /** The navbar names the screen you are on; a stock detail page names the stock. */
@@ -70,18 +41,89 @@ function usePageTitle(): string {
   return match ? t(match.key) : APP_NAME;
 }
 
+/** "auttapon@example.com" → "AU". Never more than two characters. */
+function initialsFor(email: string | null | undefined): string {
+  const name = email?.split('@')[0] ?? '';
+  const parts = name.split(/[._-]+/).filter(Boolean);
+  const letters =
+    parts.length > 1 ? `${parts[0]?.[0] ?? ''}${parts[1]?.[0] ?? ''}` : name.slice(0, 2);
+  return letters.toUpperCase() || '?';
+}
+
 function sidebarLinkClass({ isActive }: { isActive: boolean }): string {
-  return `flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors ${
+  return `flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors ${
     isActive
-      ? 'bg-nav-active text-white'
+      ? 'bg-nav-active text-white shadow-[inset_2px_0_0_0_var(--color-accent-bright)]'
       : 'text-nav-ink-muted hover:bg-nav-hover hover:text-white'
   }`;
 }
 
+/** Signed-in identity plus the actions that belong to it. */
+function AccountMenu({ email, onSignOut }: { email: string | null; onSignOut: () => void }) {
+  const { t } = useLanguage();
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  const dismiss = useCallback((restoreFocus: boolean) => {
+    setOpen(false);
+    if (restoreFocus) triggerRef.current?.focus();
+  }, []);
+
+  useDismiss(open, containerRef, dismiss);
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        aria-haspopup="true"
+        aria-expanded={open}
+        aria-label={`${t('common.account')}: ${email ?? ''}`}
+        className="inline-flex min-h-10 items-center gap-2 rounded-xl px-1.5 text-sm font-medium text-white transition-colors hover:bg-nav-hover sm:pr-3"
+      >
+        <span
+          aria-hidden="true"
+          className="flex size-8 items-center justify-center rounded-full bg-accent/20 text-xs font-semibold text-accent-bright"
+        >
+          {initialsFor(email)}
+        </span>
+        <span className="hidden max-w-40 truncate sm:inline">{email}</span>
+        <ChevronDownIcon
+          className={`size-4 transition-transform ${open ? 'rotate-180' : ''}`}
+        />
+      </button>
+
+      {open ? (
+        <div
+          role="menu"
+          aria-label={t('common.account')}
+          className="absolute right-0 top-[calc(100%+0.5rem)] z-[60] min-w-56 overflow-hidden rounded-xl border border-border-subtle bg-surface-raised py-1 shadow-xl"
+        >
+          <p className="truncate px-3 py-2 text-xs text-ink-muted">{email}</p>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              dismiss(false);
+              onSignOut();
+            }}
+            className="flex min-h-11 w-full items-center gap-2 px-3 text-left text-sm text-ink transition-colors hover:bg-surface-sunken"
+          >
+            <LogoutIcon className="size-4" />
+            {t('common.logout')}
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 /**
- * Desktop: dark sidebar + dark navbar + light content. Mobile: dark header +
- * content + dark bottom navigation. Adding a purchase is reachable from every
- * screen, because recording one in under 30 seconds is the product's main job.
+ * Dark sidebar, dark navbar, light workspace. On a phone the sidebar gives way
+ * to a bottom bar and a floating action, because adding a purchase must stay
+ * one tap away from every screen.
  */
 export function AppShell() {
   const { signOut, user } = useAuth();
@@ -89,6 +131,7 @@ export function AppShell() {
   const { data: stocks = [] } = useStocks();
   const [signOutError, setSignOutError] = useState<TranslationKey | null>(null);
   const [adding, setAdding] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const pageTitle = usePageTitle();
 
   async function handleSignOut() {
@@ -110,10 +153,12 @@ export function AppShell() {
         {t('common.skipToContent')}
       </a>
 
-      <aside className="hidden w-60 shrink-0 flex-col bg-nav p-4 md:flex">
-        <div className="px-3 py-2">
-          <span className="text-lg font-semibold tracking-tight text-white">{APP_NAME}</span>
-          <p className="text-xs text-nav-ink-muted">{t('common.appSubtitle')}</p>
+      <aside
+        className={`hidden shrink-0 flex-col bg-nav p-4 md:flex ${sidebarOpen ? 'w-64' : 'w-0 overflow-hidden p-0'}`}
+      >
+        <div className="flex items-center gap-2.5 px-2 py-2">
+          <BrandMark className="size-7 text-accent-bright" />
+          <BrandWordmark className="text-xl text-white" />
         </div>
 
         <nav aria-label="Main" className="mt-6 flex flex-col gap-1">
@@ -133,59 +178,60 @@ export function AppShell() {
         <button
           type="button"
           onClick={() => setAdding(true)}
-          className="mt-6 inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-accent px-4 text-sm font-semibold text-white transition-colors hover:bg-accent-strong"
+          className="mt-6 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-accent-bright to-accent px-4 text-sm font-semibold text-white shadow-sm shadow-accent/25 transition-colors hover:from-accent hover:to-accent-strong"
         >
-          <span aria-hidden="true" className="text-base leading-none">
-            +
-          </span>
+          <PlusIcon className="size-4.5" />
           {t('common.addPurchase')}
         </button>
 
         <button
           type="button"
           onClick={handleSignOut}
-          className="mt-auto inline-flex min-h-11 items-center justify-center rounded-lg border border-white/15 px-4 text-sm font-medium text-nav-ink transition-colors hover:bg-nav-hover hover:text-white"
+          className="mt-auto inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-nav-border px-4 text-sm font-medium text-nav-ink transition-colors hover:bg-nav-hover hover:text-white"
         >
+          <LogoutIcon className="size-4.5" />
           {t('common.logout')}
         </button>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-40 flex items-center justify-between gap-3 bg-nav px-4 py-3 md:px-8">
-          <div className="min-w-0">
-            <span className="text-base font-semibold text-white md:text-lg">{pageTitle}</span>
-            {user?.email ? (
-              <p className="hidden truncate text-xs text-nav-ink-muted md:block">
-                {user.email}
-              </p>
-            ) : null}
+        <header className="sticky top-0 z-40 flex items-center justify-between gap-3 bg-nav px-4 py-3 md:px-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setSidebarOpen((current) => !current)}
+              aria-label={t('common.toggleNavigation')}
+              aria-expanded={sidebarOpen}
+              className="hidden size-10 items-center justify-center rounded-xl text-nav-ink transition-colors hover:bg-nav-hover hover:text-white md:inline-flex"
+            >
+              <MenuIcon />
+            </button>
+            <span className="truncate text-base font-semibold text-white md:text-lg">
+              {pageTitle}
+            </span>
           </div>
 
           <div className="flex items-center gap-2">
             <LanguageSelector />
-            <button
-              type="button"
-              onClick={handleSignOut}
-              className="inline-flex min-h-10 items-center rounded-lg border border-white/15 px-3 text-sm font-medium text-nav-ink transition-colors hover:bg-nav-hover hover:text-white md:hidden"
-            >
-              {t('common.logout')}
-            </button>
+            <AccountMenu email={user?.email ?? null} onSignOut={handleSignOut} />
           </div>
         </header>
 
-        <main id="main" tabIndex={-1} className="flex-1 px-4 pb-28 pt-5 md:px-8 md:pb-10">
+        <main id="main" tabIndex={-1} className="flex-1 px-4 pb-28 pt-6 md:px-8 md:pb-10">
           {signOutError ? <p role="alert">{t(signOutError)}</p> : null}
           <Outlet />
         </main>
 
+        <footer className="px-4 pb-24 text-center text-xs text-ink-faint md:px-8 md:pb-6">
+          {APP_NAME} © {APP_CREDIT} · {t('common.footerTagline')}
+        </footer>
+
         <button
           type="button"
           onClick={() => setAdding(true)}
-          className="fixed bottom-20 right-4 z-40 inline-flex min-h-12 items-center gap-2 rounded-full bg-accent px-5 text-sm font-semibold text-white shadow-lg transition-colors hover:bg-accent-strong md:hidden"
+          className="fixed bottom-20 right-4 z-40 inline-flex min-h-12 items-center gap-2 rounded-full bg-gradient-to-b from-accent-bright to-accent px-5 text-sm font-semibold text-white shadow-lg transition-colors hover:from-accent hover:to-accent-strong md:hidden"
         >
-          <span aria-hidden="true" className="text-base leading-none">
-            +
-          </span>
+          <PlusIcon className="size-4.5" />
           {t('common.addPurchase')}
         </button>
 
@@ -200,7 +246,7 @@ export function AppShell() {
               end={item.to === '/'}
               className={({ isActive }) =>
                 `flex min-h-16 flex-col items-center justify-center gap-1 text-xs font-medium transition-colors ${
-                  isActive ? 'text-accent' : 'text-nav-ink-muted'
+                  isActive ? 'text-accent-bright' : 'text-nav-ink-muted'
                 }`
               }
             >

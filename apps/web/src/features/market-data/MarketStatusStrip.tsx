@@ -1,5 +1,6 @@
 import { UNAVAILABLE, type MarketPrice, type MarketState } from '@dcafolio/shared';
 
+import { InfoIcon } from '@/components/icons';
 import type { TranslationKey } from '@/i18n/en';
 import { useT } from '@/i18n/use-language';
 import { useRelativeTime } from '@/i18n/use-relative-time';
@@ -45,13 +46,17 @@ export function MarketStatusStrip({
 
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border border-border-subtle bg-surface-raised px-4 py-3 text-xs text-ink-muted shadow-sm">
-      <span className="inline-flex items-center gap-1.5 font-medium text-ink">
-        <span
-          aria-hidden="true"
-          className={`size-2 rounded-full ${
-            marketState === 'open' ? 'bg-accent' : 'bg-ink-faint'
-          }`}
-        />
+      <span className="inline-flex items-center gap-2 font-medium text-ink">
+        {marketState === 'unknown' ? (
+          <InfoIcon className="size-4 text-ink-faint" />
+        ) : (
+          <span
+            aria-hidden="true"
+            className={`size-2 rounded-full ${
+              marketState === 'open' ? 'bg-accent' : 'bg-ink-faint'
+            }`}
+          />
+        )}
         {t(MARKET_STATE_KEY[marketState])}
       </span>
 

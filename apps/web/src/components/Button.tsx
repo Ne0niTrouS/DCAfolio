@@ -9,7 +9,8 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const VARIANTS: Record<NonNullable<ButtonProps['variant']>, string> = {
-  primary: 'bg-accent text-white shadow-sm hover:bg-accent-strong',
+  primary:
+    'bg-gradient-to-b from-accent-bright to-accent text-white shadow-sm shadow-accent/25 hover:from-accent hover:to-accent-strong',
   secondary:
     'bg-surface-raised text-ink border border-border-subtle hover:bg-surface-sunken hover:border-gray-300',
   danger: 'bg-loss text-white shadow-sm hover:opacity-90',
@@ -31,7 +32,7 @@ export function Button({
       {...rest}
       disabled={disabled || pending}
       aria-busy={pending || undefined}
-      className={`inline-flex min-h-11 items-center justify-center rounded-lg px-4 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${VARIANTS[variant]} ${className}`}
+      className={`inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${VARIANTS[variant]} ${className}`}
     >
       {pending ? t('common.working') : children}
     </button>

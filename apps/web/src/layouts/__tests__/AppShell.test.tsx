@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { Route, Routes } from 'react-router-dom';
 
+import type { AuthContextValue } from '@/features/auth/auth-context';
 import { createAuthValue, renderWithAuth } from '@/test/auth-harness';
 import { createSupabaseMock } from '@/test/supabase-mock';
 import { phrase } from '@/test/i18n-harness';
@@ -88,7 +89,7 @@ describe('AppShell', () => {
     expect(screen.getByText('Dashboard content')).toBeInTheDocument();
   });
 
-  it('signs out from both layouts', async () => {
+  it('signs out from the sidebar', async () => {
     const auth = createAuthValue({ status: 'authenticated' });
     renderWithAuth(
       <Routes>
@@ -100,9 +101,50 @@ describe('AppShell', () => {
     );
 
     const logoutButtons = screen.getAllByRole('button', { name: phrase('common.logout') });
-    expect(logoutButtons).toHaveLength(2);
+    expect(logoutButtons).toHaveLength(1);
 
     await userEvent.click(logoutButtons[0]!);
     expect(auth.signOut).toHaveBeenCalled();
+  });
+
+  it('signs out from the account menu, which is the only route on a phone', async () => {
+    const auth = createAuthValue({
+      status: 'authenticated',
+      user: { email: 'owner@example.com' } as AuthContextValue['user'],
+    });
+    renderWithAuth(
+      <Routes>
+        <Route element={<AppShell />}>
+          <Route path="/" element={<p>Dashboard content</p>} />
+        </Route>
+      </Routes>,
+      { auth, initialEntries: ['/'] },
+    );
+
+    await userEvent.click(
+      screen.getByRole('button', {
+        name: `${phrase('common.account')}: owner@example.com`,
+      }),
+    );
+
+    const menu = screen.getByRole('menu', { name: phrase('common.account') });
+    await userEvent.click(
+      within(menu).getByRole('menuitem', { name: phrase('common.logout') }),
+    );
+
+    expect(auth.signOut).toHaveBeenCalled();
+  });
+
+  it('collapses and restores the sidebar', async () => {
+    render();
+
+    const toggle = screen.getByRole('button', { name: phrase('common.toggleNavigation') });
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+
+    await userEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+
+    await userEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
   });
 });

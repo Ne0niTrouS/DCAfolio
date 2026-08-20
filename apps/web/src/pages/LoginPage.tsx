@@ -1,12 +1,14 @@
-import { APP_CREDIT, APP_NAME } from '@dcafolio/shared';
+import { APP_CREDIT } from '@dcafolio/shared';
 import { useState, type FormEvent } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 
 import { Alert } from '@/components/Alert';
 import { AuthBackdrop, AuthCard } from '@/components/AuthBackdrop';
+import { BrandMark, BrandWordmark } from '@/components/Brand';
 import { Button } from '@/components/Button';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { TextField } from '@/components/TextField';
+import { LockIcon, MailIcon } from '@/components/icons';
 import { mapAuthError } from '@/features/auth/auth-errors';
 import { useAuth } from '@/features/auth/use-auth';
 import type { TranslationKey } from '@/i18n/en';
@@ -60,16 +62,25 @@ export function LoginPage() {
       </div>
 
       <AuthCard>
-        <header className="text-center">
-          <h1 className="text-3xl font-semibold tracking-tight text-ink">{APP_NAME}</h1>
-          <p className="mt-1 text-sm text-ink-muted">{t('common.appSubtitle')}</p>
+        <header className="flex flex-col items-center text-center">
+          <span className="flex size-16 items-center justify-center rounded-full bg-accent/10 text-accent-bright ring-1 ring-accent/30">
+            <BrandMark className="size-8" />
+          </span>
+          <h1 className="mt-4 text-3xl text-white">
+            <BrandWordmark />
+          </h1>
+          <p className="mt-1 text-sm text-nav-ink-muted">{t('common.appSubtitle')}</p>
         </header>
 
-        <form onSubmit={handleSubmit} noValidate className="mt-7 flex flex-col gap-4">
-          {formError ? <Alert>{t(formError)}</Alert> : null}
+        <form onSubmit={handleSubmit} noValidate className="mt-7 flex flex-col gap-3.5">
+          {formError ? <Alert surface="dark">{t(formError)}</Alert> : null}
 
           <TextField
             label={t('auth.email')}
+            hideLabel
+            tone="dark"
+            icon={<MailIcon className="size-4.5" />}
+            placeholder={t('auth.email')}
             type="email"
             name="email"
             autoComplete="email"
@@ -80,6 +91,10 @@ export function LoginPage() {
 
           <TextField
             label={t('auth.password')}
+            hideLabel
+            tone="dark"
+            icon={<LockIcon className="size-4.5" />}
+            placeholder={t('auth.password')}
             type="password"
             name="password"
             autoComplete="current-password"

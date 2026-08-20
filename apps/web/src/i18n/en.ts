@@ -30,6 +30,8 @@ export const en = {
   'common.language': 'Language',
   'common.account': 'Account',
   'common.sharesUnit': 'shares',
+  'common.toggleNavigation': 'Toggle navigation',
+  'common.footerTagline': 'Invest consistently, grow your future.',
 
   // --- accessible labels for signed figures ---------------------------
   'value.profit': 'profit',
@@ -93,6 +95,7 @@ export const en = {
 
   // --- dashboard ------------------------------------------------------
   'dashboard.title': 'Dashboard',
+  'dashboard.welcome': "Welcome back! Here's your portfolio overview.",
   'dashboard.portfolioValue': 'Portfolio Value',
   'dashboard.totalInvested': 'Total Invested',
   'dashboard.profitLoss': 'Profit/Loss',
@@ -106,6 +109,15 @@ export const en = {
   'dashboard.emptyBody': 'Add your first stock purchase.',
   'dashboard.loadError': 'Could not load your portfolio.',
   'dashboard.loadingPortfolio': 'Loading your portfolio…',
+  'dashboard.totalHoldings': 'Total holdings',
+  'dashboard.stockCount': '{count} stocks',
+  'dashboard.investedOverTime': 'Total invested over time',
+  'dashboard.noChartData': 'Not enough data to chart yet.',
+  'dashboard.summary': 'Summary',
+  'dashboard.totalStocks': 'Total Stocks',
+  'dashboard.totalSharesLabel': 'Total Shares',
+  'dashboard.transactionCount': 'Transactions',
+  'dashboard.ticker': 'Ticker',
 
   // --- market data ----------------------------------------------------
   'market.open': 'Market open',
