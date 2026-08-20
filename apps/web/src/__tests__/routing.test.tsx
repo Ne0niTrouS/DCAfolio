@@ -1,9 +1,15 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import { App } from '@/App';
 import { createAuthValue, renderWithAuth } from '@/test/auth-harness';
+import { createSupabaseMock } from '@/test/supabase-mock';
+
+// The app shell loads the stock master for the Add Purchase dialog; only that
+// I/O boundary is mocked.
+vi.mock('@/lib/supabase', () => ({ supabase: createSupabaseMock({ data: [] }).supabase }));
+
+const { App } = await import('@/App');
 
 describe('routing and route protection', () => {
   it('shows the auth loading state instead of flashing the login screen', () => {

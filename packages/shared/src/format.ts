@@ -77,3 +77,16 @@ export function formatDate(isoDate: string | null | undefined): string {
   const [, year, month, day] = match;
   return `${day}/${month}/${year}`;
 }
+
+/**
+ * Today as an ISO `YYYY-MM-DD` string in the viewer's local timezone.
+ *
+ * `toISOString()` is deliberately avoided: it converts to UTC, which shows
+ * yesterday's date for anyone in Bangkok (UTC+7) before 07:00.
+ */
+export function todayIsoDate(now: Date = new Date()): string {
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}

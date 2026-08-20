@@ -1,10 +1,12 @@
-import { APP_NAME } from '@dcafolio/shared';
+import { APP_NAME, todayIsoDate } from '@dcafolio/shared';
 import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 
 import { Button } from '@/components/Button';
 import { mapAuthError } from '@/features/auth/auth-errors';
 import { useAuth } from '@/features/auth/use-auth';
+import { TransactionDialog } from '@/features/transactions/TransactionDialog';
+import { useStocks } from '@/features/transactions/queries';
 
 const NAV_ITEMS = [
   { to: '/', label: 'Dashboard' },
@@ -20,11 +22,14 @@ function navClass({ isActive }: { isActive: boolean }): string {
 
 /**
  * Desktop: sidebar + main content. Mobile: top header + content + bottom
- * navigation. Phase 10 polishes this; the structure is already mobile-first.
+ * navigation. Adding a purchase is reachable from every screen, because
+ * recording one in under 30 seconds is the product's main job.
  */
 export function AppShell() {
   const { signOut } = useAuth();
+  const { data: stocks = [] } = useStocks();
   const [signOutError, setSignOutError] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
 
   async function handleSignOut() {
     setSignOutError(null);
@@ -53,6 +58,9 @@ export function AppShell() {
             </NavLink>
           ))}
         </nav>
+        <Button className="mt-6" onClick={() => setAdding(true)}>
+          Add Purchase
+        </Button>
         <Button variant="secondary" onClick={handleSignOut} className="mt-auto">
           Logout
         </Button>
@@ -63,6 +71,13 @@ export function AppShell() {
           {signOutError ? <p role="alert">{signOutError}</p> : null}
           <Outlet />
         </main>
+
+        <Button
+          className="fixed bottom-20 right-4 shadow-lg md:hidden"
+          onClick={() => setAdding(true)}
+        >
+          Add Purchase
+        </Button>
 
         <nav
           aria-label="Main"
@@ -84,6 +99,14 @@ export function AppShell() {
           ))}
         </nav>
       </div>
+
+      {adding ? (
+        <TransactionDialog
+          stocks={stocks}
+          today={todayIsoDate()}
+          onClose={() => setAdding(false)}
+        />
+      ) : null}
     </div>
   );
 }

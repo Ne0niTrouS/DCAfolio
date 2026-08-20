@@ -1,3 +1,4 @@
+import { QueryClientProvider } from '@tanstack/react-query';
 import { render, type RenderResult } from '@testing-library/react';
 import type { ReactElement, ReactNode } from 'react';
 import { MemoryRouter } from 'react-router-dom';
@@ -8,6 +9,8 @@ import {
   type AuthContextValue,
   type AuthStatus,
 } from '@/features/auth/auth-context';
+
+import { createTestQueryClient } from './query-harness';
 
 /**
  * A stub auth context. Tests that exercise a page's behaviour use this rather
@@ -37,9 +40,11 @@ export function AuthHarness({
   children: ReactNode;
 }) {
   return (
-    <MemoryRouter initialEntries={initialEntries}>
-      <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>
-    </MemoryRouter>
+    <QueryClientProvider client={createTestQueryClient()}>
+      <MemoryRouter initialEntries={initialEntries}>
+        <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>
+      </MemoryRouter>
+    </QueryClientProvider>
   );
 }
 
