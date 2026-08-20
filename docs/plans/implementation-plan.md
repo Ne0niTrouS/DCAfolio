@@ -22,7 +22,7 @@ npm run build     # when the phase touched apps/web
 | --- | --- | --- |
 | 0 | Documentation | ✅ Complete |
 | 1 | Project Foundation | ✅ Complete |
-| 2 | Supabase Foundation | ⬜ Not started |
+| 2 | Supabase Foundation | ✅ Complete (schema verified in PGlite; not yet applied to a real project) |
 | 3 | Authentication | ⬜ Not started |
 | 4 | Calculation Engine | ⬜ Not started |
 | 5 | Transaction Management | ⬜ Not started |
@@ -112,6 +112,14 @@ Typecheck ✅ · lint ✅ · test ✅ · build ✅.
 
 **Objective**: complete database schema, constraints, indexes, RLS policies and SET stock seed,
 expressed entirely as migrations.
+
+**Outcome (verified 2026-08-20)**: 27 database tests pass. Docker is not installed on the
+development machine, so `supabase start` cannot run; instead the real migration files are applied
+to an in-process Postgres (**PGlite**) behind a minimal Supabase shim (`auth` schema,
+`auth.users`, an `auth.uid()` backed by a session setting, and the `anon` / `authenticated` /
+`service_role` roles), so RLS policies execute exactly as they do in production.
+**Still unverified**: application against a real Supabase project (`supabase db push`) — that
+needs a Supabase account and happens in Phase 12.
 
 ### Task 2.1 — Supabase project configuration
 - **Files**: `supabase/config.toml`, `.env.example` (unchanged keys), README setup section.
