@@ -92,26 +92,33 @@ export function todayIsoDate(now: Date = new Date()): string {
 }
 
 /**
- * "5 min ago". Kept coarse on purpose: the point is whether a price is recent,
- * not the exact second it landed.
+ * The age of a timestamp, as a unit and a count rather than a phrase.
+ *
+ * This package is locale-free, so the wording is left to the client: it decides
+ * between "5 min ago" and "5 นาทีที่แล้ว". Kept coarse on purpose — the point is
+ * whether a price is recent, not the exact second it landed.
+ *
+ * Returns `null` when there is nothing to describe.
  */
-export function formatRelativeTime(
+export type RelativeTime =
+  { unit: 'justNow' } | { unit: 'minutes' | 'hours' | 'days'; count: number };
+
+export function relativeTimeParts(
   isoTimestamp: string | null | undefined,
   now: Date = new Date(),
-): string {
-  if (!isoTimestamp) return UNAVAILABLE;
+): RelativeTime | null {
+  if (!isoTimestamp) return null;
 
   const then = new Date(isoTimestamp).getTime();
-  if (Number.isNaN(then)) return UNAVAILABLE;
+  if (Number.isNaN(then)) return null;
 
   const minutes = Math.floor((now.getTime() - then) / 60_000);
-  if (minutes < 0) return 'just now';
-  if (minutes < 1) return 'just now';
-  if (minutes < 60) return `${minutes} min ago`;
+  // A clock skew that puts the capture in the future must not read as negative.
+  if (minutes < 1) return { unit: 'justNow' };
+  if (minutes < 60) return { unit: 'minutes', count: minutes };
 
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+  if (hours < 24) return { unit: 'hours', count: hours };
 
-  const days = Math.floor(hours / 24);
-  return `${days} ${days === 1 ? 'day' : 'days'} ago`;
+  return { unit: 'days', count: Math.floor(hours / 24) };
 }

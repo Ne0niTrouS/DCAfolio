@@ -1,34 +1,37 @@
+import type { TranslationKey } from '@/i18n/en';
+
 /**
- * Turns a Supabase/PostgREST failure into one sentence a person can act on.
+ * Turns a Supabase/PostgREST failure into a translation key the caller renders
+ * in the reader's language.
  *
  * Constraint names are the contract between the schema and this mapping: the
  * database is the last line of defence, and when it rejects something the user
  * should read the same rule the form states, not a Postgres error string.
  */
-export function mapDataError(error: unknown): string {
+export function mapDataError(error: unknown): TranslationKey {
   const message = error instanceof Error ? error.message.toLowerCase() : String(error ?? '');
 
   if (message.includes('transactions_invested_amount_positive')) {
-    return 'Invested amount must be greater than 0.';
+    return 'error.investedAmountPositive';
   }
   if (message.includes('transactions_shares_positive')) {
-    return 'Shares must be greater than 0.';
+    return 'error.sharesPositive';
   }
   if (message.includes('transactions_purchase_date_not_future')) {
-    return 'Purchase date cannot be in the future.';
+    return 'error.purchaseDateFuture';
   }
   if (message.includes('violates foreign key')) {
-    return 'That stock is no longer available. Pick another one.';
+    return 'error.stockUnavailable';
   }
   if (message.includes('row-level security') || message.includes('permission denied')) {
-    return 'You do not have access to that record.';
+    return 'error.forbidden';
   }
   if (message.includes('failed to fetch') || message.includes('network')) {
-    return 'Could not reach the server. Check your connection and try again.';
+    return 'error.network';
   }
   if (message.includes('jwt') || message.includes('token')) {
-    return 'Your session has expired. Sign in again.';
+    return 'error.sessionExpired';
   }
 
-  return 'Something went wrong. Please try again.';
+  return 'error.generic';
 }

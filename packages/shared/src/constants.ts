@@ -1,6 +1,8 @@
-/** Product identity. Used in the login screen, page titles and export metadata. */
+/**
+ * Product identity. The subtitle is UI copy and lives in the web app's
+ * translation dictionaries instead, so it can be shown in Thai or English.
+ */
 export const APP_NAME = 'DCAfolio';
-export const APP_SUBTITLE = 'Personal Stock Tracker';
 export const APP_CREDIT = 'NeOniTrouS';
 
 /** V1 is deliberately Thai SET only. Widening this is a scope change. */

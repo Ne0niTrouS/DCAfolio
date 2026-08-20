@@ -1,26 +1,42 @@
 import { describe, expect, it } from 'vitest';
 
-import { UNAVAILABLE, formatRelativeTime, todayIsoDate } from '../format';
+import { relativeTimeParts, todayIsoDate } from '../format';
 
 const NOW = new Date('2026-08-20T10:00:00.000Z');
 
-describe('formatRelativeTime', () => {
+describe('relativeTimeParts', () => {
   it('stays coarse, because what matters is whether a price is recent', () => {
-    expect(formatRelativeTime('2026-08-20T09:59:30.000Z', NOW)).toBe('just now');
-    expect(formatRelativeTime('2026-08-20T09:55:00.000Z', NOW)).toBe('5 min ago');
-    expect(formatRelativeTime('2026-08-20T09:00:00.000Z', NOW)).toBe('1 hour ago');
-    expect(formatRelativeTime('2026-08-20T05:00:00.000Z', NOW)).toBe('5 hours ago');
-    expect(formatRelativeTime('2026-08-19T09:00:00.000Z', NOW)).toBe('1 day ago');
-    expect(formatRelativeTime('2026-08-10T09:00:00.000Z', NOW)).toBe('10 days ago');
+    expect(relativeTimeParts('2026-08-20T09:59:30.000Z', NOW)).toEqual({ unit: 'justNow' });
+    expect(relativeTimeParts('2026-08-20T09:55:00.000Z', NOW)).toEqual({
+      unit: 'minutes',
+      count: 5,
+    });
+    expect(relativeTimeParts('2026-08-20T09:00:00.000Z', NOW)).toEqual({
+      unit: 'hours',
+      count: 1,
+    });
+    expect(relativeTimeParts('2026-08-20T05:00:00.000Z', NOW)).toEqual({
+      unit: 'hours',
+      count: 5,
+    });
+    expect(relativeTimeParts('2026-08-19T09:00:00.000Z', NOW)).toEqual({
+      unit: 'days',
+      count: 1,
+    });
+    expect(relativeTimeParts('2026-08-10T09:00:00.000Z', NOW)).toEqual({
+      unit: 'days',
+      count: 10,
+    });
   });
 
-  it('treats a future timestamp as just now rather than showing a negative age', () => {
-    expect(formatRelativeTime('2026-08-20T11:00:00.000Z', NOW)).toBe('just now');
+  it('treats a future timestamp as just now rather than reporting a negative age', () => {
+    expect(relativeTimeParts('2026-08-20T11:00:00.000Z', NOW)).toEqual({ unit: 'justNow' });
   });
 
-  it('renders nothing usable as a dash', () => {
-    expect(formatRelativeTime(null, NOW)).toBe(UNAVAILABLE);
-    expect(formatRelativeTime('not a timestamp', NOW)).toBe(UNAVAILABLE);
+  it('reports nothing usable as null, leaving the dash to the caller', () => {
+    expect(relativeTimeParts(null, NOW)).toBeNull();
+    expect(relativeTimeParts(undefined, NOW)).toBeNull();
+    expect(relativeTimeParts('not a timestamp', NOW)).toBeNull();
   });
 });
 
