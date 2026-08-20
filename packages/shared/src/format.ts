@@ -90,3 +90,28 @@ export function todayIsoDate(now: Date = new Date()): string {
   const day = String(now.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
+
+/**
+ * "5 min ago". Kept coarse on purpose: the point is whether a price is recent,
+ * not the exact second it landed.
+ */
+export function formatRelativeTime(
+  isoTimestamp: string | null | undefined,
+  now: Date = new Date(),
+): string {
+  if (!isoTimestamp) return UNAVAILABLE;
+
+  const then = new Date(isoTimestamp).getTime();
+  if (Number.isNaN(then)) return UNAVAILABLE;
+
+  const minutes = Math.floor((now.getTime() - then) / 60_000);
+  if (minutes < 0) return 'just now';
+  if (minutes < 1) return 'just now';
+  if (minutes < 60) return `${minutes} min ago`;
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+
+  const days = Math.floor(hours / 24);
+  return `${days} ${days === 1 ? 'day' : 'days'} ago`;
+}
