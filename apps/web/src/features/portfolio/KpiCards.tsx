@@ -1,23 +1,34 @@
 import type { Portfolio } from '@dcafolio/calculation';
 import { UNAVAILABLE, formatMoney } from '@dcafolio/shared';
+import type { ReactNode } from 'react';
 
 import { SignedMoney, SignedPercent } from '@/components/SignedValue';
+import { CalendarIcon, PieIcon, TrendUpIcon, WalletIcon } from '@/components/icons';
 import { useT } from '@/i18n/use-language';
 
 function Card({
   label,
+  icon,
   children,
   note,
 }: {
   label: string;
-  children: React.ReactNode;
+  icon: ReactNode;
+  children: ReactNode;
   note?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-border-subtle bg-surface-raised px-4 py-4 shadow-sm">
-      <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">{label}</p>
-      <p className="mt-2 text-xl font-semibold tracking-tight">{children}</p>
-      {note ? <p className="mt-1 text-xs text-ink-faint">{note}</p> : null}
+    <div className="rounded-2xl border border-border-subtle bg-surface-raised p-4 shadow-sm">
+      <div className="flex items-center gap-3">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent-light text-accent-strong">
+          {icon}
+        </span>
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-muted">
+          {label}
+        </p>
+      </div>
+      <p className="mt-3 text-2xl font-semibold tracking-tight">{children}</p>
+      {note ? <p className="mt-2 text-xs text-ink-faint">{note}</p> : null}
     </div>
   );
 }
@@ -28,9 +39,10 @@ export function KpiCards({ portfolio }: { portfolio: Portfolio }) {
   const partial = portfolio.hasIncompletePricing;
 
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
       <Card
         label={t('dashboard.portfolioValue')}
+        icon={<TrendUpIcon />}
         {...(partial ? { note: t('dashboard.partialPricing') } : {})}
       >
         <span className="tnum text-ink">
@@ -38,19 +50,19 @@ export function KpiCards({ portfolio }: { portfolio: Portfolio }) {
         </span>
       </Card>
 
-      <Card label={t('dashboard.totalInvested')}>
+      <Card label={t('dashboard.totalInvested')} icon={<WalletIcon />}>
         <span className="tnum text-ink">{formatMoney(portfolio.totalInvested)}</span>
       </Card>
 
-      <Card label={t('dashboard.profitLoss')}>
+      <Card label={t('dashboard.profitLoss')} icon={<TrendUpIcon />}>
         <SignedMoney value={portfolio.profitLoss} />
       </Card>
 
-      <Card label={t('dashboard.returnPercent')}>
+      <Card label={t('dashboard.returnPercent')} icon={<PieIcon />}>
         <SignedPercent value={portfolio.returnPercent} />
       </Card>
 
-      <Card label={t('dashboard.dcaPerMonth')}>
+      <Card label={t('dashboard.dcaPerMonth')} icon={<CalendarIcon />}>
         <span className="tnum text-ink">
           {portfolio.dcaPerMonth === null ? UNAVAILABLE : formatMoney(portfolio.dcaPerMonth)}
         </span>

@@ -179,6 +179,6 @@ describe('DashboardPage', () => {
       '/stocks/CPALL',
     );
     expect(screen.getByText(phrase('dashboard.recentTransactions'))).toBeInTheDocument();
-    expect(screen.getByText('09/08/2026')).toBeInTheDocument();
+    expect(screen.getAllByText('09/08/2026').length).toBeGreaterThan(0);
   });
 });

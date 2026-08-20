@@ -1,14 +1,19 @@
 import { todayIsoDate } from '@dcafolio/shared';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { Button } from '@/components/Button';
+import { Panel } from '@/components/Panel';
+import { PieIcon, TrendUpIcon } from '@/components/icons';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { MarketStatusStrip } from '@/features/market-data/MarketStatusStrip';
 import { useLatestPrices } from '@/features/market-data/use-latest-prices';
 import { useMarketStatus } from '@/features/market-data/use-market-status';
+import { InvestedChart } from '@/features/portfolio/InvestedChart';
 import { KpiCards } from '@/features/portfolio/KpiCards';
 import { PositionList } from '@/features/portfolio/PositionList';
 import { RecentTransactions } from '@/features/portfolio/RecentTransactions';
+import { SummaryCard } from '@/features/portfolio/SummaryCard';
+import { investedSeries } from '@/features/portfolio/invested-series';
 import { usePortfolio } from '@/features/portfolio/use-portfolio';
 import { TransactionDialog } from '@/features/transactions/TransactionDialog';
 import { useStocks } from '@/features/transactions/queries';
@@ -23,9 +28,16 @@ export function DashboardPage() {
   const { data: stocks = [] } = useStocks();
   const [adding, setAdding] = useState(false);
 
+  const series = useMemo(() => investedSeries(transactions), [transactions]);
+
   return (
     <section className="flex flex-col gap-5">
-      <h1 className="text-2xl font-semibold tracking-tight text-ink">{t('dashboard.title')}</h1>
+      <header>
+        <h1 className="text-3xl font-semibold tracking-tight text-ink">
+          {t('dashboard.title')}
+        </h1>
+        <p className="mt-1 text-sm text-ink-muted">{t('dashboard.welcome')}</p>
+      </header>
 
       {isLoading ? <LoadingState label={t('dashboard.loadingPortfolio')} /> : null}
 
@@ -55,19 +67,29 @@ export function DashboardPage() {
             failed={pricesQuery.isError}
           />
 
-          <section aria-labelledby="positions-heading">
-            <h2
-              id="positions-heading"
-              className="text-sm font-semibold tracking-tight text-ink"
-            >
-              {t('dashboard.allocation')}
-            </h2>
-            <div className="mt-3">
-              <PositionList positions={portfolio.positions} />
-            </div>
-          </section>
+          <div className="grid gap-4 xl:grid-cols-2">
+            <Panel title={t('dashboard.allocation')} icon={<PieIcon />}>
+              <PositionList
+                positions={portfolio.positions}
+                totalInvested={portfolio.totalInvested}
+              />
+            </Panel>
 
-          <RecentTransactions transactions={transactions} />
+            <Panel title={t('dashboard.investedOverTime')} icon={<TrendUpIcon />}>
+              {series.length > 0 ? (
+                <InvestedChart points={series} label={t('dashboard.investedOverTime')} />
+              ) : (
+                <p className="py-10 text-center text-sm text-ink-muted">
+                  {t('dashboard.noChartData')}
+                </p>
+              )}
+            </Panel>
+          </div>
+
+          <div className="grid gap-4 xl:grid-cols-[2fr_1fr]">
+            <RecentTransactions transactions={transactions} />
+            <SummaryCard portfolio={portfolio} />
+          </div>
         </>
       ) : null}
 
