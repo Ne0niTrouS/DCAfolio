@@ -60,9 +60,12 @@ export default tseslint.config(
     },
   },
   {
-    files: ['**/*.test.{ts,tsx}', '**/__tests__/**/*.{ts,tsx}'],
+    files: ['**/*.test.{ts,tsx}', '**/__tests__/**/*.{ts,tsx}', 'apps/web/src/test/**'],
     rules: {
       'no-restricted-imports': 'off',
+      // Test helpers are never hot-reloaded, so the fast-refresh constraint
+      // buys nothing here.
+      'react-refresh/only-export-components': 'off',
     },
   },
 );

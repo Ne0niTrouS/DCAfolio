@@ -40,6 +40,13 @@ export default defineConfig({
           globals: true,
           setupFiles: ['./vitest.setup.ts'],
           include: ['src/**/*.test.{ts,tsx}'],
+          // Placeholder credentials so modules that assert on configuration can
+          // load. The Supabase client itself is mocked in tests.
+          env: {
+            VITE_SUPABASE_URL: 'http://localhost:54321',
+            VITE_SUPABASE_ANON_KEY: 'test-anon-key',
+            VITE_MARKET_DATA_PROVIDER: 'mock',
+          },
         },
       },
     ],

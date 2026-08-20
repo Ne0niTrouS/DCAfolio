@@ -1,20 +1,33 @@
-import { APP_CREDIT, APP_NAME, APP_SUBTITLE } from '@dcafolio/shared';
+import { Route, Routes } from 'react-router-dom';
 
-/**
- * Phase 1 application shell. Routing, authentication and the real pages arrive
- * in Phase 3 — see docs/plans/implementation-plan.md.
- */
+import { ProtectedRoute } from '@/features/auth/ProtectedRoute';
+import { AppShell } from '@/layouts/AppShell';
+import { DashboardPage } from '@/pages/DashboardPage';
+import { ExportPage } from '@/pages/ExportPage';
+import { ForgotPasswordPage } from '@/pages/ForgotPasswordPage';
+import { HistoryPage } from '@/pages/HistoryPage';
+import { LoginPage } from '@/pages/LoginPage';
+import { NotFoundPage } from '@/pages/NotFoundPage';
+import { ResetPasswordPage } from '@/pages/ResetPasswordPage';
+import { StockDetailPage } from '@/pages/StockDetailPage';
+
 export function App() {
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center px-6 py-12">
-      <div className="w-full max-w-sm text-center">
-        <h1 className="text-3xl font-semibold tracking-tight text-ink">{APP_NAME}</h1>
-        <p className="mt-1 text-sm text-ink-muted">{APP_SUBTITLE}</p>
-        <p className="mt-8 rounded-lg border border-border-subtle bg-surface-raised px-4 py-3 text-sm text-ink-muted">
-          Project foundation ready. Authentication lands in Phase 3.
-        </p>
-        <p className="mt-8 text-xs text-ink-muted">© {APP_CREDIT}</p>
-      </div>
-    </main>
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+      <Route element={<ProtectedRoute />}>
+        <Route element={<AppShell />}>
+          <Route path="/" element={<DashboardPage />} />
+          <Route path="/history" element={<HistoryPage />} />
+          <Route path="/stocks/:symbol" element={<StockDetailPage />} />
+          <Route path="/export" element={<ExportPage />} />
+        </Route>
+      </Route>
+
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
   );
 }
