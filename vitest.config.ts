@@ -20,6 +20,18 @@ export default defineConfig({
         },
       },
       {
+        // Schema, constraint and RLS tests run against an in-process Postgres
+        // (PGlite) with a minimal Supabase shim, so they need no Docker.
+        test: {
+          name: 'database',
+          root: './supabase',
+          environment: 'node',
+          include: ['tests/**/*.test.ts'],
+          testTimeout: 60_000,
+          hookTimeout: 120_000,
+        },
+      },
+      {
         extends: './apps/web/vite.config.ts',
         test: {
           name: 'web',
