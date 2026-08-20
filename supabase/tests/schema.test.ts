@@ -1,13 +1,19 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { asServiceRole, createTestDb, createUser, type TestDb } from './helpers/test-db';
+import {
+  asServiceRole,
+  createTestDb,
+  createUser,
+  migrationPath,
+  type TestDb,
+} from './helpers/test-db';
 
 let db: TestDb;
 let userId: string;
 let stockId: string;
 
 beforeAll(async () => {
-  db = await createTestDb({ seed: true });
+  db = await createTestDb();
   userId = await createUser(db, 'owner@example.com');
   const stock = await db.query<{ id: string }>(
     `select id from public.stocks where symbol = 'CPALL'`,
@@ -164,7 +170,7 @@ describe('market price constraints', () => {
   });
 });
 
-describe('seed', () => {
+describe('stock master migration', () => {
   it('loads Thai SET stocks with Thai names', async () => {
     const result = await db.query<{ count: string }>(
       `select count(*)::text as count from public.stocks where market = 'SET'`,
@@ -183,10 +189,10 @@ describe('seed', () => {
       `select count(*)::text as count from public.stocks`,
     );
 
-    const seedAgain = await import('node:fs/promises').then((fs) =>
-      fs.readFile(new URL('../seed/stocks.sql', import.meta.url), 'utf8'),
-    );
-    await db.exec(seedAgain);
+    // Re-applying must be harmless: a migration can be replayed on a database
+    // that already holds the rows.
+    const { readFile } = await import('node:fs/promises');
+    await db.exec(await readFile(migrationPath('0004_seed_stocks.sql'), 'utf8'));
 
     const after = await db.query<{ count: string }>(
       `select count(*)::text as count from public.stocks`,

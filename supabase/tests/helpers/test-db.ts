@@ -51,23 +51,30 @@ const SUPABASE_SHIM = `
   grant usage on schema auth to anon, authenticated, service_role;
 `;
 
-const MIGRATIONS = ['0001_init.sql', '0002_indexes.sql', '0003_rls.sql'];
+export const MIGRATIONS = [
+  '0001_init.sql',
+  '0002_indexes.sql',
+  '0003_rls.sql',
+  '0004_seed_stocks.sql',
+];
+
+export function migrationPath(migration: string): string {
+  return join(supabaseDir, 'migrations', migration);
+}
 
 export type TestDb = PGlite;
 
-/** Boots an in-memory Postgres with the Supabase shim and every migration applied. */
-export async function createTestDb(options: { seed?: boolean } = {}): Promise<TestDb> {
+/**
+ * Boots an in-memory Postgres with the Supabase shim and every migration
+ * applied. The stock master is migration 0004, so it arrives automatically —
+ * exactly as it does on a real project after `supabase db push`.
+ */
+export async function createTestDb(): Promise<TestDb> {
   const db = new PGlite();
   await db.exec(SUPABASE_SHIM);
 
   for (const migration of MIGRATIONS) {
-    const sql = await readFile(join(supabaseDir, 'migrations', migration), 'utf8');
-    await db.exec(sql);
-  }
-
-  if (options.seed) {
-    const seed = await readFile(join(supabaseDir, 'seed', 'stocks.sql'), 'utf8');
-    await db.exec(seed);
+    await db.exec(await readFile(migrationPath(migration), 'utf8'));
   }
 
   return db;

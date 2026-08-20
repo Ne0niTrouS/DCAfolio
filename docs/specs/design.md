@@ -72,7 +72,7 @@ DCAfolio/
 │   ├── migrations/
 │   ├── functions/
 │   │   └── market-data/
-│   └── seed/
+│   └── tests/
 │
 └── docs/
     ├── specs/design.md
@@ -248,9 +248,9 @@ create index market_prices_stock_time_idx on market_prices (stock_id, captured_a
 `set_updated_at()` — `BEFORE UPDATE` on `profiles` and `transactions`, sets
 `updated_at = now()`.
 
-### 3.7 Seed
+### 3.7 Stock master
 
-`supabase/seed/stocks.sql` seeds a starter set of well-known SET symbols (CPALL, PTT, AOT, ADVANC,
+Migration `0004_seed_stocks.sql` loads a starter set of well-known SET symbols (CPALL, PTT, AOT, ADVANC,
 KBANK, SCB, BBL, PTTEP, CPN, BDMS, …) with Thai names, `market = 'SET'`, `is_active = true`.
 Seeding is idempotent (`on conflict (symbol) do nothing`). The list is a convenience, not an
 exhaustive SET listing; more symbols are added by migration.

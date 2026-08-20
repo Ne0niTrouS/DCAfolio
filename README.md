@@ -123,7 +123,6 @@ Full instructions, including account creation and production verification, are i
 npx supabase login
 npx supabase link --project-ref <your-project-ref>
 npx supabase db push
-npx supabase db execute --file supabase/seed/stocks.sql
 ```
 
 **There is no sign-up screen.** DCAfolio is a single-owner personal app, so

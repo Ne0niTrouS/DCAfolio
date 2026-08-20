@@ -1,4 +1,9 @@
--- DCAfolio — Thai SET stock master seed
+-- DCAfolio 0004 — Thai SET stock master
+--
+-- The stock master is reference data, so it ships as a migration rather than a
+-- seed file: the Supabase CLI has no command that runs an arbitrary SQL file
+-- against a remote project, and `supabase db push` is the only supported way to
+-- get rows into production. Applying migrations locally seeds development too.
 --
 -- A starter list of widely-held SET symbols so the transaction form is usable
 -- immediately. It is NOT an exhaustive SET listing.

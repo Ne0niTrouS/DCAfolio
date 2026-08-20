@@ -69,14 +69,9 @@ npx supabase link --project-ref <your-project-ref>
 npx supabase db push
 ```
 
-Then load the stock master:
-
-```bash
-npx supabase db execute --file supabase/seed/stocks.sql
-```
-
-(Alternatively paste `supabase/seed/stocks.sql` into the dashboard SQL editor. It is idempotent,
-so running it twice is harmless.)
+That applies all four migrations, including the stock master. The Supabase CLI has no command
+that runs an arbitrary SQL file against a remote project, which is exactly why the stock master
+is migration `0004_seed_stocks.sql` rather than a separate seed file.
 
 **Verify** in the dashboard SQL editor:
 
@@ -89,7 +84,7 @@ select count(*) from public.stocks;          -- expect 21
 select count(*) from pg_policies where schemaname = 'public';  -- expect 10
 ```
 
-> The seed is a starter list, not the full SET listing, and several Thai companies have renamed
+> The stock master is a starter list, not the full SET listing, and several Thai companies have renamed
 > recently. Check the symbols and Thai names you actually hold against
 > <https://www.set.or.th>, and correct them with a **new migration** — never by editing the
 > production database by hand.

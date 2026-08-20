@@ -15,7 +15,7 @@ let stockId: string;
 let aliceTransactionId: string;
 
 beforeAll(async () => {
-  db = await createTestDb({ seed: true });
+  db = await createTestDb();
   alice = await createUser(db, 'alice@example.com');
   bob = await createUser(db, 'bob@example.com');
 

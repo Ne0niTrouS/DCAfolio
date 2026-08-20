@@ -149,7 +149,7 @@ needs a Supabase account and happens in Phase 12.
 - **Verification**: the test suite passes against a local Supabase instance.
 
 ### Task 2.5 — Stock seed
-- **Files**: `supabase/seed/stocks.sql`.
+- **Files**: `supabase/migrations/0004_seed_stocks.sql`.
 - **Details**: starter SET symbols with Thai names, idempotent `on conflict (symbol) do nothing`.
 - **Verification**: seeding twice produces no duplicates.
 
@@ -576,7 +576,7 @@ built bundle contains no secret-shaped strings.
 and a Cloudflare Pages site requires accounts and credentials the agent does not have, so every
 step is written up for the owner to run:
 [`deployment-runbook.md`](deployment-runbook.md). It covers GitHub, the Supabase project,
-`db push` and the seed, account creation (there is no sign-up screen), the Edge Function and its
+`db push` (which includes the stock master), account creation (there is no sign-up screen), the Edge Function and its
 secrets, the Cloudflare Pages build settings, the SPA fallback, the auth redirect URLs, a
 17-point production verification list, the free-tier limits and rollback.
 
@@ -593,7 +593,7 @@ PostgREST.
 - **Verification**: the remote tree matches the local tree minus ignored files.
 
 ### Task 12.2 — Supabase production
-- **Details**: create the project, `supabase db push`, apply the seed, configure the site URL and
+- **Details**: create the project, `supabase db push` (migrations include the stock master), configure the site URL and
   the password-reset redirect, deploy the `market-data` Edge Function (if Phase 7.4 shipped),
   set secrets with `supabase secrets set`.
 - **Verification**: schema and RLS present in production; a test sign-in succeeds.
