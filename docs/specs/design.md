@@ -31,10 +31,9 @@ Related: [`../../CLAUDE.md`](../../CLAUDE.md) · [`../../context.md`](../../cont
 ```
 
 The platform is **Supabase-first**: **there is no always-running Node/Express CRUD backend in
-V1.** Authenticated CRUD goes straight
-from the browser to Supabase; RLS is the security boundary. Only work that genuinely needs a
-server — calling an external market API with a secret and writing the price cache — lives in an
-Edge Function.
+V1.** Authenticated CRUD goes straight from the browser to Supabase; RLS is the security
+boundary. Only work that genuinely needs a server — calling an external market API with a secret
+and writing the price cache — lives in an Edge Function.
 
 ### 1.2 Repository layout
 
@@ -50,7 +49,7 @@ DCAfolio/
 │   └── web/                     # React + Vite application
 │       ├── index.html
 │       ├── vite.config.ts
-│       ├── tailwind.config.js
+│       ├── vitest.setup.ts
 │       └── src/
 │           ├── main.tsx
 │           ├── App.tsx

@@ -21,7 +21,7 @@ npm run build     # when the phase touched apps/web
 | Phase | Title | Status |
 | --- | --- | --- |
 | 0 | Documentation | ✅ Complete |
-| 1 | Project Foundation | ⬜ Not started |
+| 1 | Project Foundation | ✅ Complete |
 | 2 | Supabase Foundation | ⬜ Not started |
 | 3 | Authentication | ⬜ Not started |
 | 4 | Calculation Engine | ⬜ Not started |
@@ -38,9 +38,14 @@ npm run build     # when the phase touched apps/web
 
 ## PHASE 1 — Project Foundation
 
-**Objective**: a working Supabase-first npm-workspaces monorepo with React + TypeScript + Vite + Tailwind, lint,
-format, test runner, git configuration and environment configuration — verified by a passing
-typecheck, lint, test and production build.
+**Objective**: a working Supabase-first npm-workspaces monorepo with React + TypeScript + Vite +
+Tailwind, lint, format, test runner, git configuration and environment configuration — verified
+by a passing typecheck, lint, test and production build.
+
+**Outcome (verified 2026-08-20)**: Node 22.16.0 / npm 11.4.2. Vite 8.2.1, React 19.2.8,
+Tailwind 4.3.3 (CSS-first, so no `tailwind.config.js`), TypeScript 5.9.3 (pinned below 6 for
+`typescript-eslint` compatibility), ESLint 10.8.1, Vitest 4.1.11. 16 tests across 3 projects.
+Typecheck ✅ · lint ✅ · test ✅ · build ✅.
 
 ### Task 1.1 — Inspect repository
 - **Files**: none.
@@ -68,7 +73,7 @@ typecheck, lint, test and production build.
 - **Expected**: importable packages.
 
 ### Task 1.4 — Web app (Vite + React + TS + Tailwind)
-- **Files**: `apps/web/{package.json,tsconfig.json,vite.config.ts,index.html,postcss.config.js,tailwind.config.js}`,
+- **Files**: `apps/web/{package.json,tsconfig.json,vite.config.ts,index.html}`,
   `apps/web/src/{main.tsx,App.tsx,index.css}`.
 - **Details**: Vite React-TS. Tailwind with a minimal finance-appropriate theme and tabular
   numerals. Path alias `@/` → `apps/web/src`. Workspace packages consumed as source via alias so
@@ -78,10 +83,12 @@ typecheck, lint, test and production build.
 - **Expected**: an app shell that builds.
 
 ### Task 1.5 — Lint, format, test config
-- **Files**: `eslint.config.js`, `.prettierrc`, `vitest.workspace.ts`,
+- **Files**: `eslint.config.js`, `.prettierrc`, `vitest.config.ts`,
   `apps/web/vitest.setup.ts`.
-- **Details**: ESLint flat config (TS + React Hooks + import rules), Prettier, Vitest workspace
-  covering all three workspaces, jsdom + RTL setup for the web app.
+- **Details**: ESLint flat config (TypeScript + React Hooks + React Refresh, plus a
+  `no-restricted-imports` purity guard keeping `packages/*` free of React, Supabase and `node:`
+  imports), Prettier, and Vitest projects covering all three workspaces with jsdom + RTL for the
+  web app.
 - **Verification**: `npm run lint` and `npm test` pass.
 - **Expected**: enforced standards.
 
