@@ -26,7 +26,7 @@ npm run build     # when the phase touched apps/web
 | 3 | Authentication | ✅ Complete (unverified against a live Supabase project) |
 | 4 | Calculation Engine | ✅ Complete |
 | 5 | Transaction Management | ✅ Complete (unverified against a live Supabase project) |
-| 6 | Dashboard | ⬜ Not started |
+| 6 | Dashboard | ✅ Complete |
 | 7 | Market Data | ⬜ Not started |
 | 8 | History | ⬜ Not started |
 | 9 | Export | ⬜ Not started |
@@ -310,6 +310,11 @@ number, which would silently round a large amount. Mutations never send a `user_
 ## PHASE 6 — Dashboard
 
 **Objective**: the primary screen, answering invested / worth / up-or-down at a glance.
+
+**Outcome (verified 2026-08-20)**: 210 tests pass. Dashboard and stock detail both render
+correctly with a fresh price, a stale price, no price at all, and a failed price query.
+Staleness is decided at read time from the capture age, so a stopped refresh job cannot make an
+old price look current.
 
 ### Task 6.1 — Portfolio query layer
 - **Files**: `apps/web/src/features/portfolio/use-portfolio.ts`.
