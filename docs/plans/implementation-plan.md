@@ -29,7 +29,7 @@ npm run build     # when the phase touched apps/web
 | 6 | Dashboard | ✅ Complete |
 | 7 | Market Data | ✅ Complete (mock provider is the documented default) |
 | 8 | History | ✅ Complete |
-| 9 | Export | ⬜ Not started |
+| 9 | Export | ✅ Complete |
 | 10 | Responsive Polish | ⬜ Not started |
 | 11 | Quality | ⬜ Not started |
 | 12 | Deployment | ⬜ Not started |
@@ -455,6 +455,13 @@ stock and date filters are asserted to reach the query as `eq`/`gte` filters, an
 ## PHASE 9 — Export
 
 **Objective**: CSV and XLSX export across all four scopes, restricted to the user's own data.
+
+**Outcome (verified 2026-08-20)**: 258 tests pass. **Library change**: the design named the
+`xlsx` (SheetJS) package; its npm build is abandoned at 0.18.5 with two unfixed high-severity
+advisories (prototype pollution, ReDoS), so XLSX is produced with **`write-excel-file`** (MIT,
+maintained, browser-first, write-only). `design.md` §10 records the change.
+**Still unverified**: opening a generated .xlsx in Excel — the sheet structure and every value
+are asserted in tests, but no file has been opened in a spreadsheet application.
 
 ### Task 9.1 — Export selection & filtering
 - **Files**: `apps/web/src/features/export/export-filters.ts`.
