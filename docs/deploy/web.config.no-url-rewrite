@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  FALLBACK IIS configuration — use only when the URL Rewrite module cannot be
+  installed on the server.
+
+  The normal file (apps/web/public/web.config, copied into every build) uses
+  <rewrite>, which needs https://www.iis.net/downloads/microsoft/url-rewrite.
+  Without that module IIS fails the whole site with 500.19 / 0x8007000d.
+
+  This version reaches the same result through <httpErrors>: a request for a
+  path that is not a file becomes a 404, and IIS then executes index.html in its
+  place, which boots the app and lets React Router read the URL.
+
+  Two honest caveats:
+
+  1. The HTTP status stays 404 on those responses even though the page renders.
+     Fine for a private single-user app; wrong for anything a crawler reads.
+  2. `path` is absolute and must match where the app is deployed. Change it if
+     the application path changes.
+
+  To use it: copy over the web.config in the deployed folder, renamed:
+
+      Copy-Item docs\deploy\web.config.no-url-rewrite `
+                C:\inetpub\wwwroot\DCA_Folio\web.config -Force
+-->
+<configuration>
+  <system.webServer>
+
+    <httpErrors errorMode="Custom" existingResponse="Replace">
+      <remove statusCode="404" subStatusCode="-1" />
+      <error statusCode="404" path="/DCA_Folio/index.html" responseMode="ExecuteURL" />
+    </httpErrors>
+
+    <staticContent>
+      <remove fileExtension=".json" />
+      <mimeMap fileExtension=".json" mimeType="application/json" />
+      <remove fileExtension=".svg" />
+      <mimeMap fileExtension=".svg" mimeType="image/svg+xml" />
+      <remove fileExtension=".woff" />
+      <mimeMap fileExtension=".woff" mimeType="font/woff" />
+      <remove fileExtension=".woff2" />
+      <mimeMap fileExtension=".woff2" mimeType="font/woff2" />
+      <remove fileExtension=".webmanifest" />
+      <mimeMap fileExtension=".webmanifest" mimeType="application/manifest+json" />
+      <remove fileExtension=".map" />
+      <mimeMap fileExtension=".map" mimeType="application/json" />
+    </staticContent>
+
+    <httpProtocol>
+      <customHeaders>
+        <add name="X-Content-Type-Options" value="nosniff" />
+        <add name="Referrer-Policy" value="strict-origin-when-cross-origin" />
+        <add name="X-Frame-Options" value="DENY" />
+        <add name="Cache-Control" value="no-cache, must-revalidate" />
+      </customHeaders>
+    </httpProtocol>
+
+  </system.webServer>
+
+  <location path="assets">
+    <system.webServer>
+      <httpProtocol>
+        <customHeaders>
+          <remove name="Cache-Control" />
+          <add name="Cache-Control" value="public, max-age=31536000, immutable" />
+        </customHeaders>
+      </httpProtocol>
+    </system.webServer>
+  </location>
+</configuration>

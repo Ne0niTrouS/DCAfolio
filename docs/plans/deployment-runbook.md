@@ -263,8 +263,30 @@ Go to **Supabase → Authentication → URL Configuration** and use the IIS addr
 | 4 | DevTools → Console | No "Missing environment variable" error |
 | 5 | Sign in | The dashboard loads and the session survives a reload |
 
-If check 2 returns 404, URL Rewrite is missing or `web.config` did not get copied. If the page is
-blank and check 3 shows 404s on `/assets/...`, the `base` path is wrong for a sub-application.
+### Troubleshooting
+
+| Symptom | Cause | Fix |
+| --- | --- | --- |
+| `500.19` with error code `0x8007000d` and an empty *Config Source* | URL Rewrite is not installed, so IIS cannot parse the `<rewrite>` section | Install the module, or use the fallback below |
+| Deep link returns a plain IIS `404` | `web.config` was not copied, or the module is missing | Confirm `web.config` sits beside `index.html` |
+| Page is blank, DevTools shows `404` on `/assets/…` | `base` does not match the application path | Rebuild with `VITE_BASE_PATH` |
+| `Missing environment variable VITE_SUPABASE_URL` in the console | The build ran without `.env` | Rebuild with the values in place |
+
+Confirm whether the module is present before guessing:
+
+```powershell
+Test-Path "$env:windir\System32\inetsrv\rewrite.dll"
+```
+
+### If URL Rewrite cannot be installed
+
+`docs/deploy/web.config.no-url-rewrite` reaches the same result with `<httpErrors>`, which is
+built into IIS. Copy it over the deployed `web.config`, renamed, and edit the `path` to match the
+application path.
+
+It has one honest flaw: those responses keep HTTP status 404 even though the page renders.
+Acceptable for a private single-user app, wrong for anything public. Installing the module is
+still the better answer.
 
 ---
 
