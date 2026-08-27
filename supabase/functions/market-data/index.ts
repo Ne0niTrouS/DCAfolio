@@ -1,28 +1,41 @@
 // DCAfolio — market-data Edge Function (Deno).
 //
-// The browser never calls a market-data provider directly: API secrets would be
-// exposed and the price cache is not writable by clients. This function is the
-// only writer of public.market_prices.
+// The browser never calls a market-data provider directly: the price cache is
+// not writable by clients, provider credentials must stay server-side, and a
+// browser call would put the reader's own IP and a CORS wall in the way. This
+// function is the only writer of public.market_prices.
 //
-// Failure path (design.md section 9.4): when the provider cannot supply a quote,
-// the last successful price is re-published with is_stale = true, so the
+// Failure path (design.md section 9.4): when the provider cannot supply a
+// quote, the last successful price is re-published with is_stale = true, so the
 // dashboard keeps working and the UI can say plainly that the number is cached.
 //
-// V1 uses the mock provider. See docs/specs/market-data-providers.md — no free
-// source of Thai SET quotes could be verified, and no real price is fabricated.
+// Provider selection is the MARKET_DATA_PROVIDER secret: `yahoo` for real SET
+// prices, `mock` for obviously synthetic ones. See
+// docs/specs/market-data-providers.md for what accepting `yahoo` costs.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
-type Quote = {
-  symbol: string;
-  price: string;
-  provider: string;
-  capturedAt: string;
+import {
+  cooldownRemainingMinutes,
+  parseMarketState,
+  parseQuote,
+  quoteUrl,
+  REQUEST_USER_AGENT,
+  staleFromMarketState,
+  SYNC_COOLDOWN_MINUTES,
+  YAHOO_PROVIDER_ID,
+  type MarketState,
+  type Quote,
+} from '../_shared/yahoo.ts';
+
+type Batch = {
+  quotes: Record<string, Quote | null>;
+  marketState: MarketState;
 };
 
 interface MarketDataProvider {
   readonly id: string;
-  getQuotes(symbols: string[]): Promise<Record<string, Quote | null>>;
+  getQuotes(symbols: string[]): Promise<Batch>;
 }
 
 /** Deterministic and obviously synthetic. Never presented as a real quote. */
@@ -44,12 +57,87 @@ const mockProvider: MarketDataProvider = {
     for (const symbol of symbols) {
       quotes[symbol] = { symbol, price: syntheticPrice(symbol), provider: 'mock', capturedAt };
     }
-    return Promise.resolve(quotes);
+    // A mock cannot know whether the SET is open, and guessing would be a lie.
+    return Promise.resolve({ quotes, marketState: 'unknown' });
+  },
+};
+
+/** Runs `worker` over `items`, never more than `limit` in flight at once. */
+async function mapWithLimit<T, R>(
+  items: T[],
+  limit: number,
+  worker: (item: T) => Promise<R>,
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let next = 0;
+
+  const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (next < items.length) {
+      const index = next++;
+      results[index] = await worker(items[index]!);
+    }
+  });
+
+  await Promise.all(runners);
+  return results;
+}
+
+/**
+ * Yahoo Finance, one request per symbol.
+ *
+ * The batch endpoint (`/v7/finance/quote?symbols=...`) answers 401 without a
+ * session crumb, so there is no way to ask for several at once. Concurrency is
+ * held to 4: enough that a dozen holdings refresh in about a second, low enough
+ * not to arrive looking like a scraper.
+ */
+const yahooProvider: MarketDataProvider = {
+  id: YAHOO_PROVIDER_ID,
+
+  async getQuotes(symbols) {
+    const now = new Date();
+    const quotes: Record<string, Quote | null> = {};
+    let marketState: MarketState = 'unknown';
+
+    const payloads = await mapWithLimit(symbols, 4, async (symbol) => {
+      try {
+        const response = await fetch(quoteUrl(symbol), {
+          headers: { 'User-Agent': REQUEST_USER_AGENT, Accept: 'application/json' },
+          signal: AbortSignal.timeout(10_000),
+        });
+
+        // 404 says the symbol is unknown to Yahoo, which is a fact about that
+        // one holding; any other status is a fact about the provider. Both
+        // become a null quote, but only the second is worth a log line.
+        if (!response.ok) {
+          if (response.status !== 404) {
+            console.warn(`Yahoo returned ${response.status} for ${symbol}`);
+          }
+          return { symbol, payload: null };
+        }
+
+        return { symbol, payload: (await response.json()) as unknown };
+      } catch (error) {
+        console.warn(`Yahoo request failed for ${symbol}:`, error);
+        return { symbol, payload: null };
+      }
+    });
+
+    for (const { symbol, payload } of payloads) {
+      quotes[symbol] = payload === null ? null : parseQuote(symbol, payload, now);
+
+      // Every SET listing reports the same trading window, so the first
+      // readable payload settles it for the whole batch.
+      if (marketState === 'unknown' && payload !== null) {
+        marketState = parseMarketState(payload, now);
+      }
+    }
+
+    return { quotes, marketState };
   },
 };
 
 function resolveProvider(id: string): MarketDataProvider {
-  // Register a verified provider here; the rest of this function is unchanged.
+  if (id === YAHOO_PROVIDER_ID) return yahooProvider;
   if (id !== 'mock') {
     console.warn(`Unknown market data provider "${id}"; using the mock provider.`);
   }
@@ -73,8 +161,8 @@ Deno.serve(async (request) => {
 
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-  // Only refresh stocks somebody actually holds — the free tiers this project
-  // targets are rate limited, and unheld symbols cost quota for nothing.
+  // Only refresh stocks somebody actually holds — an unheld symbol costs a
+  // request and produces a price nothing on the dashboard reads.
   const { data: held, error: heldError } = await supabase
     .from('transactions')
     .select('stock_id, stocks ( id, symbol )');
@@ -90,18 +178,49 @@ Deno.serve(async (request) => {
   }
 
   if (stocks.size === 0) {
-    return Response.json({ provider: providerId, captured: 0, stale: 0 });
+    return Response.json({ provider: providerId, captured: 0, stale: 0, marketState: 'unknown' });
+  }
+
+  // Cooldown: the refresh button is one click, but a reload loop is no clicks
+  // at all. Without this the provider sees a request per press of F5.
+  const { data: newest } = await supabase
+    .from('market_prices')
+    .select('captured_at')
+    .in('stock_id', [...stocks.values()])
+    .order('captured_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const waitMinutes = cooldownRemainingMinutes(
+    newest ? String(newest.captured_at) : null,
+    new Date(),
+  );
+
+  if (waitMinutes > 0) {
+    return Response.json({
+      provider: providerId,
+      captured: 0,
+      stale: 0,
+      skipped: true,
+      retryInMinutes: waitMinutes,
+      cooldownMinutes: SYNC_COOLDOWN_MINUTES,
+    });
   }
 
   const provider = resolveProvider(providerId);
 
-  let quotes: Record<string, Quote | null> = {};
+  let batch: Batch = { quotes: {}, marketState: 'unknown' };
   let providerFailed = false;
   try {
-    quotes = await provider.getQuotes([...stocks.keys()]);
+    batch = await provider.getQuotes([...stocks.keys()]);
   } catch (error) {
     providerFailed = true;
     console.error('Market data provider failed:', error);
+  }
+
+  // A provider that answered nothing usable has failed, whether or not it threw.
+  if (!providerFailed && Object.values(batch.quotes).every((quote) => quote === null)) {
+    providerFailed = true;
   }
 
   const rows: {
@@ -114,16 +233,18 @@ Deno.serve(async (request) => {
   const stale: string[] = [];
 
   for (const [symbol, stockId] of stocks) {
-    const quote = providerFailed ? null : quotes[symbol];
+    const quote = providerFailed ? null : batch.quotes[symbol];
 
     if (quote) {
+      const isStale = staleFromMarketState(batch.marketState);
       rows.push({
         stock_id: stockId,
         price: quote.price,
         provider: quote.provider,
         captured_at: quote.capturedAt,
-        is_stale: false,
+        is_stale: isStale,
       });
+      if (isStale) stale.push(symbol);
       continue;
     }
 
@@ -160,6 +281,8 @@ Deno.serve(async (request) => {
     provider: providerId,
     captured: rows.length - stale.length,
     stale: stale.length,
+    marketState: batch.marketState,
     providerFailed,
+    cooldownMinutes: SYNC_COOLDOWN_MINUTES,
   });
 });

@@ -1,8 +1,12 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "types": ["node"]
+    "types": ["node"],
+    // The Edge Functions are Deno, which requires explicit .ts specifiers.
+    // `functions/_shared` holds the pure parsing they depend on, and the tests
+    // here import it directly so that logic is covered by Vitest.
+    "allowImportingTsExtensions": true
   },
-  "include": ["tests"],
-  "exclude": ["functions"]
+  "include": ["tests", "functions/_shared"],
+  "exclude": ["functions/market-data", "functions/stock-admin"]
 }

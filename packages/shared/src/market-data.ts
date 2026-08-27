@@ -34,6 +34,12 @@ export interface MarketDataProvider {
   getMarketStatus(): Promise<MarketStatus>;
 }
 
-/** Provider ids known to V1. `mock` is the documented default. */
-export const MARKET_DATA_PROVIDER_IDS = ['mock'] as const;
+/**
+ * Provider ids known to V1.
+ *
+ * `yahoo` reads real SET prices from an undocumented, unsupported endpoint and
+ * is only ever run server-side; `mock` is obviously synthetic. What accepting
+ * `yahoo` costs is recorded in docs/specs/market-data-providers.md.
+ */
+export const MARKET_DATA_PROVIDER_IDS = ['yahoo', 'mock'] as const;
 export type MarketDataProviderId = (typeof MARKET_DATA_PROVIDER_IDS)[number];
