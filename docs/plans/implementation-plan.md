@@ -35,6 +35,7 @@ npm run build     # when the phase touched apps/web
 | 12 | Deployment | 🟡 Documented, not executed (needs owner credentials) |
 | 13 | UI Redesign & Localization | ✅ Complete (browser-verified signed out; signed-in screens covered by tests only) |
 | 14 | Mockup Alignment | ✅ Complete (same verification limits as Phase 13) |
+| 15 | Searchable Pickers & Stock Master | ✅ Complete (Edge Function not yet deployed) |
 
 ---
 
@@ -723,3 +724,55 @@ The "Plan your future / Learn more" promo card is also absent: it has no destina
 **Expected result**: the mockup's visual language across every screen, with no invented figure.
 **Commits**: `feat: rework the shell and signed-out screens to the new mockups` ·
 `feat: rebuild the dashboard around allocation and invested-over-time`.
+
+---
+
+## PHASE 15 — Searchable Pickers and the Stock Master
+
+**Objective**: make choosing a stock workable as the master grows, stop offering export filters
+that cannot match anything, and let the owner add a stock without handing the browser write
+access to shared data.
+
+### Task 15.1 — Searchable stock pickers
+- **Files**: `components/ComboBox.tsx`, `features/transactions/TransactionForm.tsx`,
+  `features/export/ExportForm.tsx`, `test/combobox.ts`, `vitest.setup.ts`.
+- **Details**: ARIA combobox — an input owning a listbox, arrow keys, Enter, Escape,
+  `aria-activedescendant` — filtering on both the symbol and the Thai company name. No
+  dependency added. The highlight index is clamped where it is read rather than corrected in an
+  effect, avoiding a re-render per keystroke.
+- **Tests**: `components/__tests__/ComboBox.test.tsx` — filtering by symbol and by Thai name, the
+  no-match state, mouse and keyboard selection, Escape and outside-click restoring the previous
+  value, and the error wiring.
+- **Verification**: typecheck, lint, tests, build.
+
+### Task 15.2 — Export lists holdings, not the master
+- **Files**: `features/transactions/owned-stocks.ts`, `pages/ExportPage.tsx`,
+  `pages/HistoryPage.tsx`.
+- **Details**: the export filter listed every stock in the master; picking one never bought could
+  only produce an empty file. It now lists holdings, as History already did, from a single shared
+  helper.
+- **Tests**: `ExportForm.test.tsx` covers the narrowed, searchable list.
+
+### Task 15.3 — Stock master, added through an Edge Function
+- **Files**: `supabase/functions/stock-admin/index.ts`,
+  `packages/shared/src/stock-validation.ts`, `features/stocks/{create-stock.ts,AddStockForm.tsx}`,
+  `pages/StockMasterPage.tsx`, `App.tsx`, `layouts/AppShell.tsx`.
+- **Details**: `stocks` stays unwritable by clients (§12 unchanged). The page calls an Edge
+  Function that verifies the caller with the anon key and their own token, validates the payload,
+  then inserts with the service-role key. Responses carry translation keys, never raw Postgres
+  errors. Deleting and renaming are deliberately not offered — both would rewrite history for any
+  transaction referencing the row.
+- **Tests**: `packages/shared/src/__tests__/stock-validation.test.ts` and
+  `features/stocks/__tests__/AddStockForm.test.tsx` (client-side rejection without a call,
+  normalisation, duplicate symbol, expired session, unrecognised failure).
+- **Verification**: typecheck, lint, 319 tests, build.
+
+**Scope note**: an in-app editor for the stock master was outside V1 and conflicted with the
+locked rule that `stocks` is writable only server-side. It was raised, three options were put to
+the owner — migration only, relax RLS, or an Edge Function — and the Edge Function was chosen,
+which adds the capability without weakening the rule.
+
+**Expected result**: choosing a stock scales past a handful of symbols, export offers only what
+can actually be exported, and the master can grow from the app.
+**Commits**: `feat: make stock pickers searchable, and export list only holdings` ·
+`feat: add stocks to the master through a privileged edge function`.

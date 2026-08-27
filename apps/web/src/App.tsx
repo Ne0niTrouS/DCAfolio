@@ -26,6 +26,9 @@ const StockDetailPage = lazy(() =>
 const ExportPage = lazy(() =>
   import('@/pages/ExportPage').then((module) => ({ default: module.ExportPage })),
 );
+const StockMasterPage = lazy(() =>
+  import('@/pages/StockMasterPage').then((module) => ({ default: module.StockMasterPage })),
+);
 
 export function App() {
   return (
@@ -45,6 +48,7 @@ export function App() {
           <Route path="/" element={<DashboardPage />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/stocks/:symbol" element={<StockDetailPage />} />
+          <Route path="/stocks" element={<StockMasterPage />} />
           <Route path="/export" element={<ExportPage />} />
         </Route>
       </Route>

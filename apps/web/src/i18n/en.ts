@@ -13,6 +13,7 @@ export const en = {
   'common.dashboard': 'Dashboard',
   'common.history': 'History',
   'common.export': 'Export',
+  'common.stocks': 'Stocks',
   'common.addPurchase': 'Add Purchase',
   'common.logout': 'Logout',
   'common.cancel': 'Cancel',
@@ -79,6 +80,7 @@ export const en = {
   'error.stockUnavailable': 'That stock is no longer available. Pick another one.',
   'error.forbidden': 'You do not have access to that record.',
   'error.sessionExpired': 'Your session has expired. Sign in again.',
+  'error.symbolTaken': 'That symbol is already in the list.',
 
   // --- form validation (codes come from @dcafolio/shared) -------------
   'validation.selectPurchaseDate': 'Select a purchase date.',
@@ -93,6 +95,29 @@ export const en = {
   'validation.sharesPositive': 'Shares must be greater than 0.',
   /** Mirrors SHARE_DECIMALS in @dcafolio/shared. */
   'validation.shareDecimals': 'Use at most 4 decimal places.',
+  'validation.symbolRequired': 'Enter the stock symbol.',
+  'validation.symbolFormat': 'Use letters and digits only, for example CPALL.',
+  'validation.symbolTooLong': 'That symbol is too long.',
+  'validation.nameThRequired': 'Enter the Thai company name.',
+  'validation.nameThTooLong': 'That company name is too long.',
+
+  // --- stock master ---------------------------------------------------
+  'master.title': 'Stocks',
+  'master.description': 'The shared list of Thai SET stocks you can record a purchase against.',
+  'master.addTitle': 'Add a stock',
+  'master.symbol': 'Symbol',
+  'master.symbolPlaceholder': 'CPALL',
+  'master.nameTh': 'Company name (Thai)',
+  'master.nameThPlaceholder': 'บริษัท ซีพี ออลล์ จำกัด (มหาชน)',
+  'master.submit': 'Add stock',
+  'master.added': '{symbol} was added.',
+  'master.search': 'Search',
+  'master.searchPlaceholder': 'Symbol or Thai name',
+  'master.count': '{count} stocks',
+  'master.empty': 'No stock matches that search.',
+  'master.loadError': 'Could not load the stock list.',
+  'master.serverNote':
+    'Adding a stock goes through a server check — the browser cannot write this list directly.',
 
   // --- dashboard ------------------------------------------------------
   'dashboard.title': 'Dashboard',

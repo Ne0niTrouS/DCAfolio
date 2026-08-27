@@ -9,6 +9,7 @@ import {
   ClockIcon,
   DownloadIcon,
   HomeIcon,
+  ListIcon,
   LogoutIcon,
   MenuIcon,
   PlusIcon,
@@ -28,6 +29,7 @@ const NAV_ITEMS: {
 }[] = [
   { to: '/', key: 'common.dashboard', icon: HomeIcon },
   { to: '/history', key: 'common.history', icon: ClockIcon },
+  { to: '/stocks', key: 'common.stocks', icon: ListIcon },
   { to: '/export', key: 'common.export', icon: DownloadIcon },
 ];
 
@@ -237,7 +239,7 @@ export function AppShell() {
 
         <nav
           aria-label="Main"
-          className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-3 bg-nav md:hidden"
+          className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 bg-nav md:hidden"
         >
           {NAV_ITEMS.map((item) => (
             <NavLink

@@ -29,8 +29,15 @@ describe('dictionaries', () => {
   it('leaves no phrase empty or accidentally left in English', () => {
     for (const [key, value] of Object.entries(th)) {
       expect(value.trim(), key).not.toBe('');
-      // Only symbols, units and product names may legitimately match.
-      if (['common.language', 'dashboard.dcaPerMonth'].includes(key)) continue;
+      // A handful legitimately match: a ticker, a Thai company name used as an
+      // example, and labels built from product names rather than words.
+      const SAME_IN_BOTH = [
+        'common.language',
+        'dashboard.dcaPerMonth',
+        'master.symbolPlaceholder',
+        'master.nameThPlaceholder',
+      ];
+      if (SAME_IN_BOTH.includes(key)) continue;
       expect(value, key).not.toBe(en[key as keyof typeof en]);
     }
   });

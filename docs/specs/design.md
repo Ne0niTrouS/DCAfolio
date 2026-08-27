@@ -597,6 +597,43 @@ figures render as `—` with a short explanation, and invested/shares/average co
 Every place a market price is shown must be able to show: the price, the provider, the
 last-updated time, and a stale/cached badge when applicable.
 
+### 9.6 The `stock-admin` Edge Function
+
+Adding to the stock master from the app, without giving the browser write access to shared
+reference data.
+
+`stocks` is readable by every signed-in user and writable by none: a client that could write it
+could also rename or deactivate a symbol under every other reader, and the rows are referenced by
+`transactions.stock_id`. The rule in §12 therefore stands unchanged — the app asks a function
+instead of writing the table.
+
+```
+Stocks page → supabase.functions.invoke('stock-admin')
+                  │  caller's JWT
+                  ▼
+            stock-admin (Deno)
+              1. verify the caller with the ANON key + their token
+                 — never with the service-role client, which would
+                   report a valid user for any input
+              2. validate symbol and Thai name
+              3. insert with the service-role key
+                  │
+                  ▼
+            public.stocks   (CHECK constraints, unique(symbol))
+```
+
+The same rules run three times: in the browser so the user gets a sentence instead of a
+rejection, in the function because a browser check protects nobody, and as CHECK constraints in
+the schema, which is the last word. `packages/shared/src/stock-validation.ts` holds the browser
+copy; the function repeats it, because Deno cannot import from the npm workspace.
+
+Responses carry translation keys, not sentences: `error.symbolTaken` on a unique violation
+(409), `error.sessionExpired` when the caller is not signed in (401), a `validation.*` code on a
+bad payload (400). The raw Postgres error is logged server-side and never returned.
+
+**Deleting or renaming is deliberately not offered.** Both would rewrite history for any
+transaction pointing at the row. Correct a mistake with a new migration.
+
 ---
 
 ## 10. Export
@@ -754,7 +791,7 @@ on `Escape`.
 | RLS | Enabled on `profiles`, `stocks`, `transactions`, `market_prices`. |
 | `profiles` | SELECT/INSERT/UPDATE/DELETE restricted to `user_id = auth.uid()`. |
 | `transactions` | SELECT/UPDATE/DELETE `USING (user_id = auth.uid())`; INSERT `WITH CHECK (user_id = auth.uid())`. |
-| `stocks` | SELECT for role `authenticated`. No client write policy. |
+| `stocks` | SELECT for role `authenticated`. No client write policy — writes go through the `stock-admin` Edge Function (§9.6). |
 | `market_prices` | SELECT for role `authenticated`. Writes only via the Edge Function's service role. |
 | Identity | Always `auth.uid()`. A client-supplied `user_id` is never trusted. |
 | Secrets | Service-role key, provider API keys and tokens live only in Edge Function secrets. Never in `VITE_*`, never in the bundle, never in git. |

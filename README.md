@@ -35,6 +35,9 @@ range. A table on desktop, purpose-built cards on mobile.
 **Stock detail** — shares, total invested, average cost, current price, current value,
 profit/loss, return %, and the purchase history for one stock.
 
+**Stocks** — the shared list of Thai SET symbols, searchable, with a form to add one. Adding
+goes through a server check: the browser has no write access to that list.
+
 **Export** — CSV and XLSX, for one stock or all, by month, by year, or all time. XLSX carries a
 Transactions sheet and a Summary sheet.
 
@@ -55,7 +58,7 @@ colour alone.
 Browser — React + TypeScript + Vite + Tailwind
    │  @supabase/supabase-js (anon key, user JWT)
    ▼
-Supabase — Auth · PostgreSQL + Row Level Security · Edge Function (market-data)
+Supabase — Auth · PostgreSQL + Row Level Security · Edge Functions (market-data, stock-admin)
    │
    ▼
 Market-data provider (mock in V1)
@@ -63,8 +66,9 @@ Market-data provider (mock in V1)
 
 **Supabase-first.** There is no always-running Node/Express backend. The React app talks to
 PostgreSQL directly and **Row Level Security is the authorization boundary**. Only work that
-genuinely needs a server — calling an external market API with a secret and writing the price
-cache — lives in an Edge Function.
+genuinely needs a server lives in an Edge Function: calling an external market API with a secret
+and writing the price cache, and adding to the shared stock master, which the browser is not
+allowed to write.
 
 ```
 apps/web/              React application
@@ -235,7 +239,7 @@ and return codes rather than sentences.
 npm test
 ```
 
-292 tests across four projects. Financial calculations are the highest priority:
+319 tests across four projects. Financial calculations are the highest priority:
 `packages/calculation` is developed test-first and sits at 100% of statements, lines and
 functions, covering one transaction, many at different prices, positive profit, negative loss,
 exactly zero, zero shares, zero invested, invalid values, missing prices, stale prices, and the
@@ -244,7 +248,7 @@ state after an edit or a delete.
 Database tests apply the real migration files to an in-process Postgres (PGlite) behind a minimal
 Supabase shim, so RLS policies execute the way they do in production — no Docker needed.
 
-Overall coverage: 93.7% statements, 95.1% lines.
+Overall coverage: 92.0% statements, 93.7% lines.
 
 ---
 

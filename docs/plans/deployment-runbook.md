@@ -113,6 +113,7 @@ Without that redirect URL the password-reset link will not return to the app.
 
 ```bash
 npx supabase functions deploy market-data
+npx supabase functions deploy stock-admin
 npx supabase secrets set MARKET_DATA_PROVIDER=mock
 ```
 
@@ -133,6 +134,18 @@ curl -X POST "https://<project-ref>.supabase.co/functions/v1/market-data" \
 > value and profit/loss on a live deployment are therefore **not real** until a verified
 > provider is added. Total invested, share counts and average cost are always real: they come
 > from your own transactions.
+
+`stock-admin` needs no secrets of its own — `SUPABASE_URL`, `SUPABASE_ANON_KEY` and
+`SUPABASE_SERVICE_ROLE_KEY` are all injected. It is what the Stocks page calls to add an entry to
+the shared master, because RLS gives the browser no write access to `stocks`. Verify it refuses
+an anonymous caller:
+
+```bash
+curl -X POST "https://<project-ref>.supabase.co/functions/v1/stock-admin" \
+  -H "Content-Type: application/json" \
+  -d '{"symbol":"TEST","nameTh":"ทดสอบ"}'
+# expect: 401 {"error":"error.sessionExpired"} — no user token, no write
+```
 
 Optional, once you have transactions: schedule a refresh with `pg_cron` in the dashboard, or
 invoke the function manually. There is deliberately no scheduler in V1.

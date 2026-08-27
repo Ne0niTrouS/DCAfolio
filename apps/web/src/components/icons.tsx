@@ -145,3 +145,12 @@ export function InfoIcon(props: IconProps) {
     </Icon>
   );
 }
+
+export function ListIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M7 5.5h9.5M7 10h9.5M7 14.5h9.5" />
+      <path d="M3.6 5.5h.01M3.6 10h.01M3.6 14.5h.01" />
+    </Icon>
+  );
+}

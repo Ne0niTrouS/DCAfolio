@@ -12,6 +12,7 @@ export const th: Dictionary = {
   'common.dashboard': 'แดชบอร์ด',
   'common.history': 'ประวัติ',
   'common.export': 'ส่งออกข้อมูล',
+  'common.stocks': 'ทะเบียนหุ้น',
   'common.addPurchase': 'เพิ่มรายการซื้อ',
   'common.logout': 'ออกจากระบบ',
   'common.cancel': 'ยกเลิก',
@@ -78,6 +79,7 @@ export const th: Dictionary = {
   'error.stockUnavailable': 'หุ้นตัวนี้ไม่พร้อมใช้งานแล้ว กรุณาเลือกตัวอื่น',
   'error.forbidden': 'คุณไม่มีสิทธิ์เข้าถึงข้อมูลนี้',
   'error.sessionExpired': 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบอีกครั้ง',
+  'error.symbolTaken': 'มีหุ้นชื่อย่อนี้อยู่แล้ว',
 
   // --- form validation (codes come from @dcafolio/shared) -------------
   'validation.selectPurchaseDate': 'กรุณาเลือกวันที่ซื้อ',
@@ -90,6 +92,29 @@ export const th: Dictionary = {
   'validation.sharesRequired': 'กรุณากรอกจำนวนหุ้นที่ได้รับ',
   'validation.sharesPositive': 'จำนวนหุ้นต้องมากกว่า 0',
   'validation.shareDecimals': 'ใช้ทศนิยมได้ไม่เกิน 4 ตำแหน่ง',
+  'validation.symbolRequired': 'กรุณากรอกชื่อย่อหุ้น',
+  'validation.symbolFormat': 'ใช้ตัวอักษรและตัวเลขเท่านั้น เช่น CPALL',
+  'validation.symbolTooLong': 'ชื่อย่อยาวเกินไป',
+  'validation.nameThRequired': 'กรุณากรอกชื่อบริษัทภาษาไทย',
+  'validation.nameThTooLong': 'ชื่อบริษัทยาวเกินไป',
+
+  // --- stock master ---------------------------------------------------
+  'master.title': 'ทะเบียนหุ้น',
+  'master.description': 'รายชื่อหุ้นไทยที่ใช้บันทึกรายการซื้อได้',
+  'master.addTitle': 'เพิ่มหุ้น',
+  'master.symbol': 'ชื่อย่อหุ้น',
+  'master.symbolPlaceholder': 'CPALL',
+  'master.nameTh': 'ชื่อบริษัท (ภาษาไทย)',
+  'master.nameThPlaceholder': 'บริษัท ซีพี ออลล์ จำกัด (มหาชน)',
+  'master.submit': 'เพิ่มหุ้น',
+  'master.added': 'เพิ่ม {symbol} แล้ว',
+  'master.search': 'ค้นหา',
+  'master.searchPlaceholder': 'ชื่อย่อหรือชื่อบริษัท',
+  'master.count': 'ทั้งหมด {count} ตัว',
+  'master.empty': 'ไม่พบหุ้นที่ตรงกับคำค้นหา',
+  'master.loadError': 'โหลดรายชื่อหุ้นไม่สำเร็จ',
+  'master.serverNote':
+    'การเพิ่มหุ้นต้องผ่านการตรวจสอบที่เซิร์ฟเวอร์ — เบราว์เซอร์เขียนรายชื่อนี้เองไม่ได้',
 
   // --- dashboard ------------------------------------------------------
   'dashboard.title': 'แดชบอร์ด',
