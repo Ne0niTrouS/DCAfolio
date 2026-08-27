@@ -116,6 +116,29 @@ describe('AddStockForm', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(phrase('error.sessionExpired'));
   });
 
+  it('names an undeployed function instead of blaming the app', async () => {
+    mocks.invoke.mockResolvedValue(functionError(404, 'NOT_FOUND'));
+    setup();
+
+    await fill('CPALL', 'บริษัท ซีพี ออลล์ จำกัด (มหาชน)');
+    await submit();
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(phrase('error.functionMissing'));
+  });
+
+  it('reports a request that never landed as a connection problem', async () => {
+    mocks.invoke.mockResolvedValue({
+      data: null,
+      error: new Error('Failed to send a request'),
+    });
+    setup();
+
+    await fill('CPALL', 'บริษัท ซีพี ออลล์ จำกัด (มหาชน)');
+    await submit();
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(phrase('error.network'));
+  });
+
   it('never leaks an unrecognised failure', async () => {
     mocks.invoke.mockResolvedValue(functionError(500, 'something raw from postgres'));
     setup();

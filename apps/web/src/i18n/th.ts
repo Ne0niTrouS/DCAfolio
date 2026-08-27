@@ -80,6 +80,7 @@ export const th: Dictionary = {
   'error.forbidden': 'คุณไม่มีสิทธิ์เข้าถึงข้อมูลนี้',
   'error.sessionExpired': 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบอีกครั้ง',
   'error.symbolTaken': 'มีหุ้นชื่อย่อนี้อยู่แล้ว',
+  'error.functionMissing': 'ฟีเจอร์นี้ยังไม่ได้ติดตั้งบนเซิร์ฟเวอร์',
 
   // --- form validation (codes come from @dcafolio/shared) -------------
   'validation.selectPurchaseDate': 'กรุณาเลือกวันที่ซื้อ',

@@ -40,11 +40,20 @@ export async function createStock(input: NewStock): Promise<Stock> {
   });
 
   if (error) {
-    // A non-2xx reply carries the reason in its body, which invoke() does not
-    // surface on the error itself.
-    const body: unknown = await (error as { context?: Response }).context
-      ?.json()
-      .catch(() => null);
+    const response = (error as { context?: Response }).context;
+
+    // No response at all means the request never landed — offline, or the
+    // project URL is wrong.
+    if (!response) throw new StockAdminError('error.network');
+
+    // A function that was never deployed 404s, and its body is the platform's,
+    // not ours. Saying "something went wrong" for that sends whoever hits it
+    // hunting through the app instead of running `functions deploy`.
+    if (response.status === 404) throw new StockAdminError('error.functionMissing');
+
+    // Otherwise the reason is in the body, which invoke() does not surface on
+    // the error itself.
+    const body: unknown = await response.json().catch(() => null);
     throw new StockAdminError(keyFrom((body as { error?: unknown } | null)?.error));
   }
 

@@ -81,6 +81,7 @@ export const en = {
   'error.forbidden': 'You do not have access to that record.',
   'error.sessionExpired': 'Your session has expired. Sign in again.',
   'error.symbolTaken': 'That symbol is already in the list.',
+  'error.functionMissing': 'This feature is not deployed on the server yet.',
 
   // --- form validation (codes come from @dcafolio/shared) -------------
   'validation.selectPurchaseDate': 'Select a purchase date.',
