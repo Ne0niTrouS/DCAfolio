@@ -274,6 +274,29 @@ GitHub → Cloudflare Pages → Supabase, all on free tiers. Follow
 [`docs/plans/deployment-runbook.md`](docs/plans/deployment-runbook.md), which covers the build
 settings, the SPA fallback, the auth redirect URLs and a 17-point production verification list.
 
+### Hosting on IIS instead
+
+The build is plain static files, so any web server can host it — including IIS. `npm run build`
+emits `apps/web/dist`; copy its contents to the site's physical path and you are done. The
+generated `web.config` carries the SPA rewrite, the MIME types and the caching rules.
+
+```powershell
+npm run build
+Copy-Item -Recurse -Force apps\web\dist\* C:\inetpub\wwwroot\dcafolio\
+```
+
+Two things to know. IIS needs the **URL Rewrite** module — it is not installed by default, and
+without it every deep link returns 404. And if the app is an IIS *application* under a site
+rather than a site of its own, build it with the sub-path:
+
+```powershell
+$env:VITE_BASE_PATH = '/dcafolio/'
+npm run build
+```
+
+Supabase stays in the cloud either way; IIS serves only the front end. Step 6b of the runbook has
+the full procedure, including why the site must be served over HTTPS.
+
 ### Free-tier limitations
 
 - **Supabase Free** pauses a project after about a week of inactivity; you resume it from the

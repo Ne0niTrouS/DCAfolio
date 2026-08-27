@@ -17,7 +17,9 @@ if (!container) {
 createRoot(container).render(
   <StrictMode>
     <QueryClientProvider client={createQueryClient()}>
-      <BrowserRouter>
+      {/* Vite's base path, so the router agrees with the asset URLs when the
+          app is served from a sub-path (an IIS application, say). */}
+      <BrowserRouter basename={import.meta.env.BASE_URL}>
         <AuthProvider>
           {/* Inside AuthProvider: crossing the sign-in boundary resets the
               language, so login and the signed-in app both start in Thai. */}

@@ -173,6 +173,101 @@ loads the app rather than a 404.
 
 ---
 
+## Step 6b — IIS (alternative to Cloudflare Pages)
+
+Use this instead of Step 6 to host DCAfolio on Windows Server or IIS Express. **Supabase is
+still in the cloud**: IIS serves only the built front end, and the browser talks to Supabase
+directly. Nothing about auth, RLS or the database changes.
+
+### Prerequisites
+
+| Requirement | Notes |
+| --- | --- |
+| IIS with **URL Rewrite 2.1** | <https://www.iis.net/downloads/microsoft/url-rewrite>. **Not** part of a default IIS install. Without it IIS returns `500.19` on the `<rewrite>` section of `web.config`. |
+| Node 22+ | Only to *build*. IIS serves plain files; no Node runtime on the server. |
+| An HTTPS binding | See the warning below. |
+
+### 1. Build with the production values
+
+`VITE_*` variables are **compiled into the bundle**, not read at runtime — so the build must
+happen with the values the deployed site will use. There is nothing to configure on the server
+afterwards.
+
+```bash
+npm ci
+npm run build
+```
+
+With `.env` at the repository root holding:
+
+```
+VITE_SUPABASE_URL=https://<your-project-ref>.supabase.co
+VITE_SUPABASE_ANON_KEY=<your anon key>
+VITE_MARKET_DATA_PROVIDER=mock
+```
+
+**Never put the `service_role` key in any `VITE_` variable.** It bypasses RLS and would be
+readable by anyone who opens the bundle.
+
+### 2. Copy the output
+
+Copy the **contents** of `apps/web/dist` — not the folder itself — into the IIS physical path:
+
+```powershell
+Copy-Item -Recurse -Force apps\web\dist\* C:\inetpub\wwwroot\dcafolio\
+```
+
+`dist\web.config` comes along with it. That file is the whole IIS configuration: the SPA
+fallback rewrite, MIME types for the extensions a Vite build emits, `no-cache` on `index.html`
+and a one-year immutable cache on the hashed files under `assets/`. It lives at
+`apps/web/public/web.config`, so it is version-controlled and every build reproduces it.
+
+### 3. Site root or sub-application?
+
+| Deployment | `base` | Build command |
+| --- | --- | --- |
+| Its own IIS **site** (`https://host/`) | `/` | `npm run build` |
+| An IIS **application** under a site (`https://host/dcafolio`) | `/dcafolio/` | set `VITE_BASE_PATH` first |
+
+```powershell
+$env:VITE_BASE_PATH = '/dcafolio/'
+npm run build
+```
+
+Both slashes matter. Get this wrong and the page loads blank, because every asset URL points one
+directory too high. `BrowserRouter` reads the same value, so routing follows automatically.
+
+### 4. Application pool
+
+Set the pool's **.NET CLR version** to *No Managed Code*. Nothing here is ASP.NET; the managed
+pipeline only adds startup cost and failure modes.
+
+### 5. Auth URLs
+
+Go to **Supabase → Authentication → URL Configuration** and use the IIS address:
+
+- Site URL: `https://your-host/dcafolio`
+- Additional redirect URLs: `https://your-host/dcafolio/reset-password`
+
+> **Serve it over HTTPS.** The Supabase session token is held in `localStorage` and sent on
+> every request. Over plain `http` on a shared network, anyone in the middle can read it and act
+> as you. An internal-only server is not an exception — issue a certificate and bind 443.
+
+### Verify
+
+| # | Check | Expected |
+| --- | --- | --- |
+| 1 | Open the site root | The login screen, in Thai |
+| 2 | Browse to `/history` and press F5 | The app reloads — not an IIS 404 |
+| 3 | DevTools → Network | No request for a `.js` or `.css` that 404s |
+| 4 | DevTools → Console | No "Missing environment variable" error |
+| 5 | Sign in | The dashboard loads and the session survives a reload |
+
+If check 2 returns 404, URL Rewrite is missing or `web.config` did not get copied. If the page is
+blank and check 3 shows 404s on `/assets/...`, the `base` path is wrong for a sub-application.
+
+---
+
 ## Step 7 — Close the loop on auth URLs
 
 Go back to **Supabase → Authentication → URL Configuration** and set:
