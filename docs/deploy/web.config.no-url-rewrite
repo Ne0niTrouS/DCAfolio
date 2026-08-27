@@ -9,12 +9,17 @@
 
   This version reaches the same result through <httpErrors>: a request for a
   path that is not a file becomes a 404, and IIS then executes index.html in its
-  place, which boots the app and lets React Router read the URL.
+  place, which boots the app and lets React Router read the URL. Measured on IIS
+  10 with `existingResponse="Replace"`, those responses come back **200**, not
+  404 — the deep link behaves like a real page.
 
-  Two honest caveats:
+  Two things to know:
 
-  1. The HTTP status stays 404 on those responses even though the page renders.
-     Fine for a private single-user app; wrong for anything a crawler reads.
+  1. It swallows genuine 404s. A request for a missing asset returns 200 with
+     the HTML of index.html, so a bad deploy shows up as a MIME-type error in
+     the console ("expected JavaScript, got text/html") rather than a clean
+     404. URL Rewrite does not have this problem: it rewrites only when the
+     path is not a real file. That is the reason to prefer the module.
   2. `path` is absolute and must match where the app is deployed. Change it if
      the application path changes.
 

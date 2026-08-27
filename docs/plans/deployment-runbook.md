@@ -284,9 +284,14 @@ Test-Path "$env:windir\System32\inetsrv\rewrite.dll"
 built into IIS. Copy it over the deployed `web.config`, renamed, and edit the `path` to match the
 application path.
 
-It has one honest flaw: those responses keep HTTP status 404 even though the page renders.
-Acceptable for a private single-user app, wrong for anything public. Installing the module is
-still the better answer.
+Verified working on IIS 10 at `/DCA_Folio`: the root, `/history`, `/stocks/CPALL` and `/export`
+all return **200** with the app rendered, hashed assets keep their one-year immutable cache, and
+`index.html` stays `no-cache`.
+
+It has one real flaw: it swallows genuine 404s. A request for an asset that does not exist also
+returns 200 with the HTML of `index.html`, so a bad deploy surfaces as a MIME-type error in the
+console rather than a clean 404. URL Rewrite does not do that — it rewrites only when the path is
+not a real file — which is why the module is still the better answer.
 
 ---
 
