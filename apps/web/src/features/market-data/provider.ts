@@ -30,3 +30,14 @@ export function resolveMarketDataProvider(
   }
   return factory();
 }
+
+/**
+ * Whether the browser can run this provider itself.
+ *
+ * `yahoo` cannot: the request belongs on the server, where no CORS wall stands
+ * in the way and the reader's own address is not handed to a third party. What
+ * it knows reaches the app through the `market-data` Edge Function instead.
+ */
+export function isClientResolvable(providerId: string = env.marketDataProvider): boolean {
+  return providerId in PROVIDERS;
+}

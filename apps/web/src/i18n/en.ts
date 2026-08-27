@@ -154,6 +154,13 @@ export const en = {
   'market.updated': 'Updated {time}',
   'market.mockBadge': 'Mock data — not real prices',
   'market.cachedBadge': 'Cached — may be out of date',
+  'market.sync': 'Sync prices',
+  'market.syncDone': 'Updated {count} prices',
+  'market.syncPartial': 'Updated {count}, kept {cached} cached',
+  'market.syncCached': 'Market closed — kept {count} cached prices',
+  'market.syncFailed': 'Could not reach the price provider. Showing cached prices.',
+  'market.syncSkipped': 'Prices are recent. Try again in {minutes} min.',
+  'market.syncNothing': 'No holdings to price yet.',
   'market.noPriceYet': 'No market price yet',
   'market.cachedPrice': 'Cached price — may be out of date',
 

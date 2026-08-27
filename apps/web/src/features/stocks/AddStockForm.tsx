@@ -11,8 +11,9 @@ import { Button } from '@/components/Button';
 import { TextField } from '@/components/TextField';
 import type { TranslationKey } from '@/i18n/en';
 import { useT } from '@/i18n/use-language';
+import { EdgeFunctionError } from '@/lib/edge-function';
 
-import { StockAdminError, useCreateStock } from './create-stock';
+import { useCreateStock } from './create-stock';
 
 /**
  * Adds one entry to the shared stock master.
@@ -50,7 +51,7 @@ export function AddStockForm() {
           setNameTh('');
         },
         onError: (error) => {
-          setFormError(error instanceof StockAdminError ? error.key : 'error.generic');
+          setFormError(error instanceof EdgeFunctionError ? error.key : 'error.generic');
         },
       },
     );

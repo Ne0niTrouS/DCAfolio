@@ -6,6 +6,7 @@ export const queryKeys = {
   transactions: ['transactions'] as const,
   transactionList: (filters: unknown) => ['transactions', 'list', filters] as const,
   marketPrices: ['market-prices'] as const,
+  marketStatus: ['market-status'] as const,
 } as const;
 
 export function createQueryClient(): QueryClient {

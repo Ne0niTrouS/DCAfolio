@@ -1,5 +1,6 @@
 import { UNAVAILABLE, type MarketPrice, type MarketState } from '@dcafolio/shared';
 
+import { Button } from '@/components/Button';
 import { InfoIcon } from '@/components/icons';
 import type { TranslationKey } from '@/i18n/en';
 import { useT } from '@/i18n/use-language';
@@ -10,6 +11,11 @@ type MarketStatusStripProps = {
   marketState?: MarketState;
   /** True when the price query itself failed; cached values may still show. */
   failed?: boolean;
+  /** Omitted where a refresh makes no sense, such as an empty portfolio. */
+  onSync?: () => void;
+  syncing?: boolean;
+  /** What the last refresh achieved, already translated. */
+  syncNote?: string;
 };
 
 const MARKET_STATE_KEY: Record<MarketState, TranslationKey> = {
@@ -36,6 +42,9 @@ export function MarketStatusStrip({
   prices,
   marketState = 'unknown',
   failed = false,
+  onSync,
+  syncing = false,
+  syncNote,
 }: MarketStatusStripProps) {
   const t = useT();
   const relative = useRelativeTime();
@@ -76,6 +85,21 @@ export function MarketStatusStrip({
         <span className="rounded-full border border-border-subtle bg-surface-sunken px-2 py-0.5 font-medium text-ink">
           {t('market.cachedBadge')}
         </span>
+      ) : null}
+
+      {onSync ? (
+        <div className="ms-auto flex flex-wrap items-center gap-x-3 gap-y-2">
+          {/* Announced politely: the outcome matters, but not enough to
+              interrupt whatever the reader is doing. */}
+          {syncNote ? (
+            <span role="status" className="text-ink-muted">
+              {syncNote}
+            </span>
+          ) : null}
+          <Button variant="secondary" pending={syncing} onClick={onSync} className="px-3">
+            {t('market.sync')}
+          </Button>
+        </div>
       ) : null}
     </div>
   );

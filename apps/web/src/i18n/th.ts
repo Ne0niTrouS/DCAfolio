@@ -151,6 +151,13 @@ export const th: Dictionary = {
   'market.updated': 'อัปเดต {time}',
   'market.mockBadge': 'ข้อมูลจำลอง — ไม่ใช่ราคาจริง',
   'market.cachedBadge': 'ข้อมูลแคช — อาจไม่เป็นปัจจุบัน',
+  'market.sync': 'ซิงก์ราคา',
+  'market.syncDone': 'อัปเดตราคาแล้ว {count} รายการ',
+  'market.syncPartial': 'อัปเดต {count} รายการ ใช้ราคาเดิม {cached} รายการ',
+  'market.syncCached': 'ตลาดปิด — ใช้ราคาที่เก็บไว้ {count} รายการ',
+  'market.syncFailed': 'ติดต่อแหล่งราคาไม่ได้ กำลังแสดงราคาที่เก็บไว้',
+  'market.syncSkipped': 'ราคายังใหม่อยู่ ลองใหม่ในอีก {minutes} นาที',
+  'market.syncNothing': 'ยังไม่มีหุ้นให้ดึงราคา',
   'market.noPriceYet': 'ยังไม่มีราคาตลาด',
   'market.cachedPrice': 'ราคาจากแคช — อาจไม่เป็นปัจจุบัน',
 

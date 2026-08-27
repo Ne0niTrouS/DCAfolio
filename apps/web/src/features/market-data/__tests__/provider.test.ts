@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { MockMarketDataProvider } from '../mock-provider';
-import { resolveMarketDataProvider } from '../provider';
+import { isClientResolvable, resolveMarketDataProvider } from '../provider';
 
 const NOW = new Date('2026-08-20T10:00:00.000Z');
 
@@ -70,5 +70,19 @@ describe('resolveMarketDataProvider', () => {
     expect(warn).toHaveBeenCalled();
 
     warn.mockRestore();
+  });
+});
+
+describe('isClientResolvable', () => {
+  it('lets the browser run the mock itself', () => {
+    expect(isClientResolvable('mock')).toBe(true);
+  });
+
+  it('refuses to run a server-side provider in the browser', () => {
+    // Calling Yahoo from the page would hand a third party the reader's own
+    // address, and CORS would block it anyway. The Edge Function is the only
+    // caller, so the app must not quietly fall back to the mock and present
+    // its answer as the configured provider's.
+    expect(isClientResolvable('yahoo')).toBe(false);
   });
 });

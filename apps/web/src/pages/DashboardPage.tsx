@@ -8,6 +8,7 @@ import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { MarketStatusStrip } from '@/features/market-data/MarketStatusStrip';
 import { useLatestPrices } from '@/features/market-data/use-latest-prices';
 import { useMarketStatus } from '@/features/market-data/use-market-status';
+import { syncMessage, useSyncPrices } from '@/features/market-data/use-sync-prices';
 import { InvestedChart } from '@/features/portfolio/InvestedChart';
 import { KpiCards } from '@/features/portfolio/KpiCards';
 import { PositionList } from '@/features/portfolio/PositionList';
@@ -18,6 +19,7 @@ import { usePortfolio } from '@/features/portfolio/use-portfolio';
 import { TransactionDialog } from '@/features/transactions/TransactionDialog';
 import { useStocks } from '@/features/transactions/queries';
 import { useT } from '@/i18n/use-language';
+import { EdgeFunctionError } from '@/lib/edge-function';
 import { mapDataError } from '@/lib/errors';
 
 export function DashboardPage() {
@@ -26,9 +28,20 @@ export function DashboardPage() {
   const pricesQuery = useLatestPrices();
   const marketStatus = useMarketStatus();
   const { data: stocks = [] } = useStocks();
+  const sync = useSyncPrices();
   const [adding, setAdding] = useState(false);
 
   const series = useMemo(() => investedSeries(transactions), [transactions]);
+
+  // A refresh that fetched nothing must not read like one that worked, so the
+  // strip reports the outcome rather than just going quiet.
+  let syncNote: string | undefined;
+  if (sync.isError) {
+    syncNote = t(sync.error instanceof EdgeFunctionError ? sync.error.key : 'error.generic');
+  } else if (sync.data) {
+    const { key, params } = syncMessage(sync.data);
+    syncNote = t(key, params);
+  }
 
   return (
     <section className="flex flex-col gap-5">
@@ -65,6 +78,9 @@ export function DashboardPage() {
             prices={pricesQuery.data ?? []}
             marketState={marketStatus.data?.state ?? 'unknown'}
             failed={pricesQuery.isError}
+            onSync={() => sync.mutate()}
+            syncing={sync.isPending}
+            syncNote={syncNote}
           />
 
           <div className="grid gap-4 xl:grid-cols-2">
