@@ -31,6 +31,7 @@ export const en = {
   'common.account': 'Account',
   'common.sharesUnit': 'shares',
   'common.toggleNavigation': 'Toggle navigation',
+  'common.noMatches': 'No matches',
   'common.footerTagline': 'Invest consistently, grow your future.',
 
   // --- accessible labels for signed figures ---------------------------
@@ -157,7 +158,7 @@ export const en = {
   'purchase.editTitle': 'Edit Purchase',
   'purchase.purchaseDate': 'Purchase Date',
   'purchase.stock': 'Stock',
-  'purchase.selectStock': 'Select a stock',
+  'purchase.selectStock': 'Search a symbol or company name',
   'purchase.investedAmount': 'Invested Amount',
   'purchase.sharesReceived': 'Shares Received',
   'purchase.calculated': 'Calculated',

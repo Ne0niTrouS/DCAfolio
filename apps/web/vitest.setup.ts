@@ -9,6 +9,13 @@ import { afterEach } from 'vitest';
 // long a test waits, never what it asserts.
 configure({ asyncUtilTimeout: 5000 });
 
+// jsdom does not implement scrollIntoView. Every real browser does, so this is
+// a gap in the test environment rather than something the components should
+// defend against.
+if (!Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = () => {};
+}
+
 afterEach(() => {
   cleanup();
 });

@@ -8,6 +8,8 @@ export default tseslint.config(
   {
     ignores: [
       '**/dist/**',
+      // Staged build output on its way to a server — minified, not source.
+      'publish/**',
       '**/coverage/**',
       '**/node_modules/**',
       'supabase/.temp/**',

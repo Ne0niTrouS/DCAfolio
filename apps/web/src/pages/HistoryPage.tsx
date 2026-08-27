@@ -1,4 +1,4 @@
-import { todayIsoDate, type Stock, type TransactionWithStock } from '@dcafolio/shared';
+import { todayIsoDate, type TransactionWithStock } from '@dcafolio/shared';
 import { useMemo, useState } from 'react';
 
 import { Button } from '@/components/Button';
@@ -8,19 +8,11 @@ import { HistoryFilters } from '@/features/transactions/HistoryFilters';
 import { TransactionCard } from '@/features/transactions/TransactionCard';
 import { TransactionDialog } from '@/features/transactions/TransactionDialog';
 import { TransactionTable } from '@/features/transactions/TransactionTable';
+import { ownedStocks } from '@/features/transactions/owned-stocks';
 import { useStocks, useTransactions } from '@/features/transactions/queries';
 import { useTransactionHistory } from '@/features/transactions/use-transaction-history';
 import { useT } from '@/i18n/use-language';
 import { mapDataError } from '@/lib/errors';
-
-/** The stock filter lists only stocks the user owns. */
-function ownedStocks(transactions: TransactionWithStock[]): Stock[] {
-  const owned = new Map<string, Stock>();
-  for (const transaction of transactions) {
-    owned.set(transaction.stockId, transaction.stock);
-  }
-  return [...owned.values()].sort((a, b) => a.symbol.localeCompare(b.symbol));
-}
 
 export function HistoryPage() {
   const t = useT();

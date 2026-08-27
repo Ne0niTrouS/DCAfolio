@@ -1,5 +1,5 @@
 import type { Stock, TransactionWithStock } from '@dcafolio/shared';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -15,6 +15,7 @@ vi.mock('@/features/transactions/queries', () => ({
 vi.mock('@/lib/download', () => ({ downloadBlob: mocks.downloadBlob }));
 vi.mock('../xlsx', () => ({ xlsxBlob: mocks.xlsxBlob }));
 
+import { pickOption, searchOptions } from '@/test/combobox';
 import { phrase } from '@/test/i18n-harness';
 
 const { ExportForm } = await import('../ExportForm');
@@ -23,6 +24,14 @@ const CPALL: Stock = {
   id: 'stock-cpall',
   symbol: 'CPALL',
   nameTh: 'บริษัท ซีพี ออลล์ จำกัด (มหาชน)',
+  market: 'SET',
+  isActive: true,
+};
+
+const PTT: Stock = {
+  id: 'stock-ptt',
+  symbol: 'PTT',
+  nameTh: 'บริษัท ปตท. จำกัด (มหาชน)',
   market: 'SET',
   isActive: true,
 };
@@ -40,7 +49,7 @@ const TRANSACTION: TransactionWithStock = {
 };
 
 function setup() {
-  render(<ExportForm stocks={[CPALL]} currentYear={2026} />);
+  render(<ExportForm stocks={[CPALL, PTT]} currentYear={2026} />);
 }
 
 beforeEach(() => {
@@ -56,11 +65,28 @@ describe('ExportForm', () => {
     expect(screen.getByLabelText(phrase('export.stock'))).toBeInTheDocument();
     expect(screen.getByLabelText(phrase('export.period'))).toBeInTheDocument();
     expect(screen.getByLabelText(phrase('export.format'))).toBeInTheDocument();
-    expect(
-      screen.getByRole('option', { name: phrase('export.allStocks') }),
-    ).toBeInTheDocument();
     expect(screen.getByRole('option', { name: 'XLSX' })).toBeInTheDocument();
     expect(screen.getByRole('option', { name: 'CSV' })).toBeInTheDocument();
+
+    // The stock field is a combobox, so its options exist only once opened.
+    expect(screen.getByLabelText(phrase('export.stock'))).toHaveValue(
+      phrase('export.allStocks'),
+    );
+    await userEvent.click(screen.getByLabelText(phrase('export.stock')));
+    const list = await screen.findByRole('listbox', { name: phrase('export.stock') });
+    expect(
+      within(list).getByRole('option', { name: phrase('export.allStocks') }),
+    ).toBeInTheDocument();
+  });
+
+  it('offers only the stocks the user actually holds, searchable', async () => {
+    setup();
+
+    await searchOptions(phrase('export.stock'), 'ปตท');
+
+    const list = screen.getByRole('listbox', { name: phrase('export.stock') });
+    expect(within(list).getByRole('option', { name: /^PTT/ })).toBeInTheDocument();
+    expect(within(list).queryByRole('option', { name: /^CPALL/ })).not.toBeInTheDocument();
   });
 
   it('asks for a month only when the period is monthly', async () => {
@@ -95,7 +121,7 @@ describe('ExportForm', () => {
   it('exports one stock for one month as CSV', async () => {
     setup();
 
-    await userEvent.selectOptions(screen.getByLabelText(phrase('export.stock')), 'stock-cpall');
+    await pickOption(phrase('export.stock'), /^CPALL/);
     await userEvent.selectOptions(screen.getByLabelText(phrase('export.period')), 'monthly');
     await userEvent.selectOptions(screen.getByLabelText(phrase('export.month')), '8');
     await userEvent.selectOptions(screen.getByLabelText(phrase('export.format')), 'csv');

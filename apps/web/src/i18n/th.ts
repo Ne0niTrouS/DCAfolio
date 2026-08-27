@@ -30,6 +30,7 @@ export const th: Dictionary = {
   'common.account': 'บัญชีผู้ใช้',
   'common.sharesUnit': 'หุ้น',
   'common.toggleNavigation': 'สลับเมนูนำทาง',
+  'common.noMatches': 'ไม่พบรายการที่ตรงกัน',
   'common.footerTagline': 'ลงทุนสม่ำเสมอ เพื่ออนาคตที่เติบโต',
 
   // --- accessible labels for signed figures ---------------------------
@@ -154,7 +155,7 @@ export const th: Dictionary = {
   'purchase.editTitle': 'แก้ไขรายการซื้อ',
   'purchase.purchaseDate': 'วันที่ซื้อ',
   'purchase.stock': 'หุ้น',
-  'purchase.selectStock': 'เลือกหุ้น',
+  'purchase.selectStock': 'ค้นหาชื่อย่อหรือชื่อบริษัท',
   'purchase.investedAmount': 'เงินลงทุน',
   'purchase.sharesReceived': 'จำนวนหุ้นที่ได้รับ',
   'purchase.calculated': 'คำนวณ',

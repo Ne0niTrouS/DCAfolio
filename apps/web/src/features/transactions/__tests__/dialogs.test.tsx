@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { renderWithQuery } from '@/test/query-harness';
 import { createSupabaseMock, type RecordedCall } from '@/test/supabase-mock';
+import { pickOption } from '@/test/combobox';
 import { phrase } from '@/test/i18n-harness';
 
 const state = vi.hoisted(() => ({
@@ -59,10 +60,7 @@ describe('TransactionDialog', () => {
 
     expect(screen.getByRole('dialog')).toHaveAccessibleName(phrase('purchase.addTitle'));
 
-    await userEvent.selectOptions(
-      screen.getByLabelText(phrase('purchase.stock')),
-      'stock-cpall',
-    );
+    await pickOption(phrase('purchase.stock'), /^CPALL/);
     await userEvent.type(screen.getByLabelText(phrase('purchase.investedAmount')), '12500');
     await userEvent.type(screen.getByLabelText(phrase('purchase.sharesReceived')), '200');
     await userEvent.click(screen.getByRole('button', { name: phrase('common.addPurchase') }));
@@ -106,10 +104,7 @@ describe('TransactionDialog', () => {
     const onClose = vi.fn();
     renderWithQuery(<TransactionDialog stocks={STOCKS} today={TODAY} onClose={onClose} />);
 
-    await userEvent.selectOptions(
-      screen.getByLabelText(phrase('purchase.stock')),
-      'stock-cpall',
-    );
+    await pickOption(phrase('purchase.stock'), /^CPALL/);
     await userEvent.type(screen.getByLabelText(phrase('purchase.investedAmount')), '12500');
     await userEvent.type(screen.getByLabelText(phrase('purchase.sharesReceived')), '200');
     await userEvent.click(screen.getByRole('button', { name: phrase('common.addPurchase') }));

@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
+import { pickOption } from '@/test/combobox';
 import { phrase } from '@/test/i18n-harness';
 
 import { TransactionForm } from '../TransactionForm';
@@ -85,10 +86,7 @@ describe('TransactionForm', () => {
 
     await userEvent.clear(date);
     await userEvent.type(date, '2026-08-21');
-    await userEvent.selectOptions(
-      screen.getByLabelText(phrase('purchase.stock')),
-      'stock-cpall',
-    );
+    await pickOption(phrase('purchase.stock'), /^CPALL/);
     await userEvent.type(screen.getByLabelText(phrase('purchase.investedAmount')), '12500');
     await userEvent.type(screen.getByLabelText(phrase('purchase.sharesReceived')), '200');
     await userEvent.click(screen.getByRole('button', { name: phrase('common.addPurchase') }));
@@ -111,10 +109,7 @@ describe('TransactionForm', () => {
   it('submits a complete purchase', async () => {
     const { onSubmit } = setup();
 
-    await userEvent.selectOptions(
-      screen.getByLabelText(phrase('purchase.stock')),
-      'stock-cpall',
-    );
+    await pickOption(phrase('purchase.stock'), /^CPALL/);
     await userEvent.type(screen.getByLabelText(phrase('purchase.investedAmount')), '12500');
     await userEvent.type(screen.getByLabelText(phrase('purchase.sharesReceived')), '200');
     await userEvent.click(screen.getByRole('button', { name: phrase('common.addPurchase') }));
@@ -139,7 +134,7 @@ describe('TransactionForm', () => {
     });
 
     expect(screen.getByLabelText(phrase('purchase.purchaseDate'))).toHaveValue('2026-06-09');
-    expect(screen.getByLabelText(phrase('purchase.stock'))).toHaveValue('stock-ptt');
+    expect(screen.getByLabelText(phrase('purchase.stock'))).toHaveValue('PTT');
     expect(screen.getByLabelText(phrase('purchase.investedAmount'))).toHaveValue('20000');
     expect(screen.getByLabelText(phrase('purchase.sharesReceived'))).toHaveValue('600');
     expect(

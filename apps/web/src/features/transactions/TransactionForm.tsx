@@ -11,7 +11,7 @@ import { useMemo, useState, type FormEvent } from 'react';
 
 import { Alert } from '@/components/Alert';
 import { Button } from '@/components/Button';
-import { SelectField } from '@/components/SelectField';
+import { ComboBox, type ComboBoxOption } from '@/components/ComboBox';
 import { TextField } from '@/components/TextField';
 import type { TranslationKey } from '@/i18n/en';
 import { useT } from '@/i18n/use-language';
@@ -66,6 +66,12 @@ export function TransactionForm({
     [values.investedAmount, values.shares],
   );
 
+  // Both the symbol and the Thai name are searchable: "ปตท" finds PTT.
+  const stockOptions = useMemo<ComboBoxOption[]>(
+    () => stocks.map((stock) => ({ value: stock.id, label: stock.symbol, hint: stock.nameTh })),
+    [stocks],
+  );
+
   function update<K extends keyof TransactionFormValues>(
     key: K,
     value: TransactionFormValues[K],
@@ -100,19 +106,14 @@ export function TransactionForm({
         onChange={(event) => update('purchaseDate', event.target.value)}
       />
 
-      <SelectField
+      <ComboBox
         label={t('purchase.stock')}
         value={values.stockId}
+        placeholder={t('purchase.selectStock')}
         error={fieldErrors.stockId ? t(fieldErrors.stockId) : undefined}
-        onChange={(event) => update('stockId', event.target.value)}
-      >
-        <option value="">{t('purchase.selectStock')}</option>
-        {stocks.map((stock) => (
-          <option key={stock.id} value={stock.id}>
-            {stock.symbol} — {stock.nameTh}
-          </option>
-        ))}
-      </SelectField>
+        options={stockOptions}
+        onChange={(stockId) => update('stockId', stockId)}
+      />
 
       <TextField
         label={t('purchase.investedAmount')}

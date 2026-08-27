@@ -1,8 +1,9 @@
 import type { Stock } from '@dcafolio/shared';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { Alert } from '@/components/Alert';
 import { Button } from '@/components/Button';
+import { ComboBox, type ComboBoxOption } from '@/components/ComboBox';
 import { SelectField } from '@/components/SelectField';
 import { fetchTransactions } from '@/features/transactions/queries';
 import type { TranslationKey } from '@/i18n/en';
@@ -33,6 +34,12 @@ function yearOptions(currentYear: number): number[] {
   return Array.from({ length: 10 }, (_, offset) => currentYear - offset);
 }
 
+/**
+ * The combobox needs a value for "every stock", and a stock id is a uuid, so
+ * this sentinel can never collide with one.
+ */
+const ALL_STOCKS = 'all';
+
 export function ExportForm({ stocks, currentYear }: { stocks: Stock[]; currentYear: number }) {
   const t = useT();
 
@@ -48,6 +55,15 @@ export function ExportForm({ stocks, currentYear }: { stocks: Stock[]; currentYe
     tone: 'error' | 'info';
     key: TranslationKey;
   } | null>(null);
+
+  // Only what the user actually holds: an unowned filter would export nothing.
+  const stockOptions = useMemo<ComboBoxOption[]>(
+    () => [
+      { value: ALL_STOCKS, label: t('export.allStocks') },
+      ...stocks.map((stock) => ({ value: stock.id, label: stock.symbol, hint: stock.nameTh })),
+    ],
+    [stocks, t],
+  );
 
   function update(patch: Partial<ExportSelection>) {
     setSelection((current) => ({ ...current, ...patch }));
@@ -82,18 +98,12 @@ export function ExportForm({ stocks, currentYear }: { stocks: Stock[]; currentYe
     <div className="flex flex-col gap-4">
       {message ? <Alert tone={message.tone}>{t(message.key)}</Alert> : null}
 
-      <SelectField
+      <ComboBox
         label={t('export.stock')}
-        value={selection.stockId ?? ''}
-        onChange={(event) => update({ stockId: event.target.value || null })}
-      >
-        <option value="">{t('export.allStocks')}</option>
-        {stocks.map((stock) => (
-          <option key={stock.id} value={stock.id}>
-            {stock.symbol}
-          </option>
-        ))}
-      </SelectField>
+        value={selection.stockId ?? ALL_STOCKS}
+        options={stockOptions}
+        onChange={(stockId) => update({ stockId: stockId === ALL_STOCKS ? null : stockId })}
+      />
 
       <SelectField
         label={t('export.period')}
