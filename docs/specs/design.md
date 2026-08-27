@@ -436,7 +436,8 @@ see §11.3.
 
 Market status (`open` / `closed` / `unknown`), provider name, last-updated timestamp, and a
 `Cached` / `Stale` badge when applicable. When the provider is the mock provider, the strip says
-so explicitly.
+so explicitly. On the right it carries the **Sync prices** button and the outcome of the last
+refresh — see §9.3.1.
 
 ### 6.7 States
 
@@ -557,23 +558,69 @@ a provider at startup through a single factory.
 
 **Provider verification is mandatory before adopting any real provider**: Thai SET symbol
 support · current availability · free-tier limits · API terms · personal-use compatibility ·
-whether an API key is required. Nothing is assumed free. Unauthorized scraping is not permitted.
+whether an API key is required. Nothing is assumed free.
 
-**Until a provider is verified, V1 ships `MockMarketDataProvider`**, which returns clearly
-synthetic, deterministic values and is labelled as mock everywhere in the UI. Real prices are
-never fabricated.
+Two providers exist:
+
+| `MARKET_DATA_PROVIDER` | What it is | Where it runs |
+| --- | --- | --- |
+| `yahoo` | Real SET prices from Yahoo Finance's undocumented chart endpoint (`…/v8/finance/chart/SYMBOL.BK`). Adopted as a risk the owner accepted in writing — see [`../../context.md`](../../context.md) §8.1 and [`market-data-providers.md`](market-data-providers.md). | **Edge Function only.** `isClientResolvable()` stops the web app resolving it, so the browser never calls Yahoo. |
+| `mock` | Clearly synthetic, deterministic values, labelled as mock everywhere in the UI. The fallback if the decision is withdrawn. | Either side. |
+
+Real prices are never fabricated in either case. When a quote cannot be had, the cached price is
+re-published as stale — no number is invented.
+
+Yahoo has no batch endpoint (`/v7/finance/quote` answers `401` without a session crumb), so the
+function issues one request per held symbol at a concurrency of 4, and requires a browser
+`User-Agent` header — without one the endpoint answers `429` on the first call.
 
 ### 9.3 Refresh & caching path
 
 ```
-Edge Function `market-data` (invoked on demand / by schedule)
-   → provider.getQuotes(active symbols held by users)
-   → success: insert into market_prices (is_stale = false)
-   → failure: keep the last successful row; the read path marks it stale
+Edge Function `market-data` (invoked by the Sync button on the dashboard)
+   → symbols actually held (read from `transactions`) — an unheld stock costs a
+     request and produces a price nothing reads
+   → cooldown: newest cached `captured_at` younger than SYNC_COOLDOWN_MINUTES (15)?
+        yes → return { skipped: true, retryInMinutes } and do NOT call the provider
+   → provider.getQuotes(held symbols)
+   → success: insert into market_prices
+        is_stale = false  while the SET is open
+        is_stale = true   otherwise — a quote fetched while the market is shut is
+                          the previous close however fresh the request was
+   → failure: re-publish the last successful row with is_stale = true
 ```
 
 The browser reads prices from `latest_market_prices`, never by calling the external provider
-directly (keeps API secrets server-side and avoids CORS/rate-limit exposure).
+directly (keeps API secrets server-side, keeps the reader's address out of it, and avoids CORS
+and rate-limit exposure).
+
+**The cooldown is enforced on the server, not by disabling the button.** A reload loop presses
+nothing and would otherwise reach the provider on every page load.
+
+`captured_at` means *when DCAfolio captured it*, not when the exchange traded it.
+`latest_market_prices` picks the newest row by that column, so writing the exchange's own trade
+time would sort a freshly fetched closing price behind an older row and hand the dashboard the
+wrong number. How current the price itself is travels on `is_stale`.
+
+### 9.3.1 Sync button
+
+The market status strip carries a **Sync prices** button. Pressing it invokes the function above
+and then reports what actually happened, because a refresh that fetched nothing must not read
+like one that worked:
+
+| Outcome | Phrase key |
+| --- | --- |
+| Fresh prices written | `market.syncDone` |
+| Some fresh, some cached | `market.syncPartial` |
+| All cached, market closed | `market.syncCached` |
+| All cached, provider unreachable | `market.syncFailed` |
+| Cooldown refused the request | `market.syncSkipped` (with the minutes left) |
+| Nothing held to price | `market.syncNothing` |
+
+Market open/closed comes back with that response and is written into the query cache. With a
+server-side provider the state shown is therefore the one that was true when prices were last
+fetched, and stays `unknown` until somebody fetches them — which is the honest answer, since the
+browser has no other way to know.
 
 ### 9.4 Failure behaviour
 

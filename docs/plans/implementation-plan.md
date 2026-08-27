@@ -27,7 +27,7 @@ npm run build     # when the phase touched apps/web
 | 4 | Calculation Engine | ✅ Complete |
 | 5 | Transaction Management | ✅ Complete (unverified against a live Supabase project) |
 | 6 | Dashboard | ✅ Complete |
-| 7 | Market Data | ✅ Complete (mock provider is the documented default) |
+| 7 | Market Data | ✅ Complete (superseded by Phase 16 — `yahoo` is now the default) |
 | 8 | History | ✅ Complete |
 | 9 | Export | ✅ Complete |
 | 10 | Responsive Polish | ✅ Complete |
@@ -36,6 +36,7 @@ npm run build     # when the phase touched apps/web
 | 13 | UI Redesign & Localization | ✅ Complete (browser-verified signed out; signed-in screens covered by tests only) |
 | 14 | Mockup Alignment | ✅ Complete (same verification limits as Phase 13) |
 | 15 | Searchable Pickers & Stock Master | ✅ Complete (Edge Function not yet deployed) |
+| 16 | Real Prices & Sync | ✅ Complete (deployed state unverified — see the phase entry) |
 
 ---
 
@@ -776,3 +777,79 @@ which adds the capability without weakening the rule.
 can actually be exported, and the master can grow from the app.
 **Commits**: `feat: make stock pickers searchable, and export list only holdings` ·
 `feat: add stocks to the master through a privileged edge function`.
+
+---
+
+## PHASE 16 — Real Prices and the Sync Button
+
+**Objective**: replace synthetic prices with real Thai SET quotes, and give the dashboard a
+button that fetches them on demand.
+
+### Task 16.1 — Re-open the provider decision
+
+- **Trigger**: the owner asked how a Sync button could work, "free provider preferred", and later
+  proposed [`UncleEngineer/ThaiStock`](https://github.com/UncleEngineer/ThaiStock) as a source.
+- **Findings**: that library scrapes `classic.settrade.com`, whose host now returns NXDOMAIN
+  (`dns.google can't find classic.settrade.com.: Non-existent domain`); its last code commit was
+  2022-06-21; it is Python where the Edge Function is Deno; and scraping settrade fails the same
+  criterion that had already excluded Yahoo. Rejected on all four counts.
+- **Outcome**: the real obstacle was never the button — it was that Phase 7 found no free
+  provider whose terms permit this use. The owner was given the choice explicitly and **accepted
+  the risk of Yahoo's undocumented endpoints in writing**. Recorded in `context.md` §8.1 and
+  `docs/specs/market-data-providers.md`, which was rewritten from "no provider qualifies" to a
+  documented accepted risk with a one-secret rollback.
+
+### Task 16.2 — The Yahoo provider
+
+- **Files**: `supabase/functions/_shared/yahoo.ts` (new), `supabase/functions/market-data/index.ts`,
+  `packages/shared/src/market-data.ts`, `supabase/tsconfig.json`.
+- **Details**: parsing is pure and lives in `_shared/`, because the Edge Function itself cannot be
+  run by Vitest and the parts that can get a number wrong must be testable. One request per symbol
+  (`/v7/finance/quote` answers 401 without a session crumb), concurrency 4, a browser
+  `User-Agent` (without one the endpoint answers 429 on the first call), a 10-second timeout, and
+  a `null` on anything unexpected — which routes into the existing stale-cache path rather than
+  into a guess.
+- **Measured before implementing, not assumed**: `PTT.BK`, `CPALL.BK` and `AOT.BK` return 200 with
+  `"exchangeName":"SET"` and `"currency":"THB"`; an unknown symbol returns 404; the batch endpoint
+  returns 401; a request without a `User-Agent` returns 429.
+- **Correctness decisions**: a non-`THB` payload is rejected outright, because a Thai ticker can
+  collide with a listing elsewhere and recording dollars as baht would corrupt every profit figure
+  downstream. Prices are stored to two decimals, which repairs Yahoo's float32 artefacts
+  (`1.2999999523162842` → `1.30`) rather than losing precision — the SET's smallest tick is ฿0.01.
+  `captured_at` stays "when DCAfolio captured it": `latest_market_prices` orders by that column, so
+  writing the exchange's own trade time would sort a freshly fetched closing price behind an older
+  row. How current the price is travels on `is_stale`, set from Yahoo's reported trading window so
+  that a public holiday is not mistaken for a trading day.
+- **Tests**: `supabase/tests/yahoo.test.ts` — 35 cases over symbol normalisation, URL building,
+  price formatting, every rejection path, market-state derivation and the cooldown.
+
+### Task 16.3 — Sync button and cooldown
+
+- **Files**: `apps/web/src/lib/edge-function.ts` (new), `features/market-data/use-sync-prices.ts`
+  (new), `MarketStatusStrip.tsx`, `pages/DashboardPage.tsx`, `use-market-status.ts`,
+  `lib/query-client.ts`, `features/stocks/create-stock.ts`, `AddStockForm.tsx`, `i18n/en.ts`,
+  `i18n/th.ts`.
+- **Details**: the cooldown (15 minutes) is enforced **inside the Edge Function**, not by
+  disabling the button — a page-reload loop presses nothing and would otherwise reach the provider
+  on every load. A refused call returns `{ skipped: true, retryInMinutes }`. `syncMessage()` is a
+  pure function so that "how many of these prices are real" can be tested against every
+  combination the server can return; a refresh that fetched nothing must not read like one that
+  worked. Error mapping was extracted from `create-stock.ts` into `invokeEdgeFunction`, since both
+  functions now need the same "read the reason off `error.context`" handling.
+- **Market status**: `useMarketStatus` is disabled when the configured provider is server-side, so
+  the browser never falls back to the mock and presents its answer as Yahoo's. The state arrives
+  with the sync response instead and stays `unknown` until somebody syncs — which is the honest
+  answer, since the browser has no other way to know.
+- **Tests**: `use-sync-prices.test.ts` (6 outcome cases), `MarketStatusStrip.test.tsx` (7,
+  including that a second press is blocked while one refresh is running), `provider.test.ts`
+  (`isClientResolvable`).
+
+- **Verification**: typecheck ✅ · lint ✅ · 369 tests across 38 files ✅ · build ✅.
+- **Not verified**: the deployed function has not been run against the live project — deploying it
+  and setting `MARKET_DATA_PROVIDER=yahoo` is the owner's step (runbook Step 5). Everything above
+  is verified locally only.
+
+**Expected result**: pressing **Sync prices** on the dashboard fetches real SET prices for the
+stocks actually held, and profit/loss stops being synthetic — with the provider named, the age
+shown, cached prices labelled, and a cooldown between the button and a third party who never
+agreed to serve it.

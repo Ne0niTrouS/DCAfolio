@@ -112,28 +112,36 @@ Without that redirect URL the password-reset link will not return to the app.
 ## Step 5 — Deploy the market-data Edge Function
 
 ```bash
-npx supabase functions deploy market-data
-npx supabase functions deploy stock-admin
-npx supabase secrets set MARKET_DATA_PROVIDER=mock
+npx supabase functions deploy market-data --use-api
+npx supabase functions deploy stock-admin --use-api
+npx supabase secrets set MARKET_DATA_PROVIDER=yahoo
 ```
 
+`--use-api` builds the function on Supabase's side, so Docker is not needed locally.
 `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are injected automatically; do not set them
 yourself.
+
+Set `MARKET_DATA_PROVIDER=mock` instead to fall back to synthetic prices. That is the whole
+rollback: no redeploy, no code change.
 
 **Verify:**
 
 ```bash
 curl -X POST "https://<project-ref>.supabase.co/functions/v1/market-data" \
   -H "Authorization: Bearer <anon-key>"
-# expect: {"provider":"mock","captured":0,"stale":0}   (0 until you record a purchase)
+# expect: {"provider":"yahoo","captured":0,"stale":0,...}   (0 until you record a purchase)
 ```
 
-> **The provider is a mock.** No free source of Thai SET quotes could be verified — see
-> [`../specs/market-data-providers.md`](../specs/market-data-providers.md). Its prices are
-> synthetic and are labelled *"Mock data — not real prices"* everywhere in the UI. Portfolio
-> value and profit/loss on a live deployment are therefore **not real** until a verified
-> provider is added. Total invested, share counts and average cost are always real: they come
-> from your own transactions.
+> **`yahoo` reads an undocumented endpoint that Yahoo does not offer as an API.** It is used
+> because the project owner accepted that risk in writing — see
+> [`../../context.md`](../../context.md) §8.1 and
+> [`../specs/market-data-providers.md`](../specs/market-data-providers.md). Expect it to break
+> without notice; the symptom is every price turning stale at once, and the fix is the `mock`
+> secret above.
+>
+> With `mock`, prices are synthetic and labelled *"Mock data — not real prices"* everywhere in
+> the UI. Portfolio value and profit/loss are then **not real**. Total invested, share counts and
+> average cost are always real whichever provider is set: they come from your own transactions.
 
 `stock-admin` needs no secrets of its own — `SUPABASE_URL`, `SUPABASE_ANON_KEY` and
 `SUPABASE_SERVICE_ROLE_KEY` are all injected. It is what the Stocks page calls to add an entry to
@@ -165,7 +173,7 @@ invoke the function manually. There is deliberately no scheduler in V1.
 | Environment variable | `NODE_VERSION` = `22` |
 | Environment variable | `VITE_SUPABASE_URL` = your project URL |
 | Environment variable | `VITE_SUPABASE_ANON_KEY` = your anon key |
-| Environment variable | `VITE_MARKET_DATA_PROVIDER` = `mock` |
+| Environment variable | `VITE_MARKET_DATA_PROVIDER` = `yahoo` |
 
 Set the variables for **both** Production and Preview, or preview deployments will fail at
 startup — `lib/env.ts` throws loudly rather than shipping a half-configured client.
@@ -216,7 +224,7 @@ With `.env` at the repository root holding:
 ```
 VITE_SUPABASE_URL=https://<your-project-ref>.supabase.co
 VITE_SUPABASE_ANON_KEY=<your anon key>
-VITE_MARKET_DATA_PROVIDER=mock
+VITE_MARKET_DATA_PROVIDER=yahoo
 ```
 
 **Never put the `service_role` key in any `VITE_` variable.** It bypasses RLS and would be
@@ -329,7 +337,7 @@ Work through every line. Record the result; do not assume.
 | 4 | Reload the page | Still signed in — no login flash |
 | 5 | Add a purchase (CPALL, ฿12,500, 200 shares) | Form shows `฿62.50/share` before you submit; takes under 30 seconds |
 | 6 | Dashboard | Total Invested `฿12,500.00`; value/profit show `—` until prices exist |
-| 7 | Invoke the market-data function, reload | A price appears, labelled "Mock data — not real prices" |
+| 7 | Press **Sync prices** on the dashboard | A real price appears, provider `yahoo`; pressing again within 15 minutes reports the cooldown instead of refetching |
 | 8 | Stock detail (`/stocks/CPALL`) | Shares 200, average cost `฿62.50`, purchase history listed |
 | 9 | Edit the purchase to ฿13,000 | Average cost becomes `฿65.00` immediately |
 | 10 | Delete it | Confirmation names the stock, date, amount and shares, and says the portfolio will be recalculated |

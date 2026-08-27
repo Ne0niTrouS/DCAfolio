@@ -61,7 +61,7 @@ Browser — React + TypeScript + Vite + Tailwind
 Supabase — Auth · PostgreSQL + Row Level Security · Edge Functions (market-data, stock-admin)
    │
    ▼
-Market-data provider (mock in V1)
+Market-data provider — Yahoo Finance (`yahoo`) or synthetic (`mock`), server-side only
 ```
 
 **Supabase-first.** There is no always-running Node/Express backend. The React app talks to
@@ -149,7 +149,7 @@ npx supabase db push
 | --- | --- | --- |
 | `VITE_SUPABASE_URL` | browser | Supabase project URL — public by design |
 | `VITE_SUPABASE_ANON_KEY` | browser | Anon key — public by design; grants nothing on its own, because RLS decides access |
-| `VITE_MARKET_DATA_PROVIDER` | browser | Provider id; `mock` in V1 |
+| `VITE_MARKET_DATA_PROVIDER` | browser | Mirrors the server-side provider id so the browser knows not to resolve one itself; `yahoo` or `mock` |
 | `MARKET_DATA_PROVIDER` | Edge Function secret | Server-side provider id |
 
 **Never put a server secret in a `VITE_` variable** — anything with that prefix is compiled into
@@ -193,21 +193,38 @@ ownership of another user's rows. See
 Market data sits behind a `MarketDataProvider` interface (`getQuote`, `getQuotes`,
 `getMarketStatus`); the dashboard and the calculation engine never depend on a concrete source.
 
-No free provider of Thai SET quotes could be verified against the project's criteria — Twelve
-Data's free tier covers three exchanges and is US-focused, Finnhub puts international data behind
-a paid plan, Alpha Vantage documents no Thailand suffix, Marketstack offers 100 end-of-day
-requests a month with unconfirmed Thai coverage, Yahoo Finance has no authorised free API, and
-the SET's own free API is an ESG dataset rather than a quote feed. The evidence is recorded in
+No free provider of Thai SET quotes passes the project's criteria — Twelve Data's free tier covers
+three exchanges and is US-focused, Finnhub puts international data behind a paid plan, Alpha
+Vantage documents no Thailand suffix, Marketstack offers 100 end-of-day requests a month with
+unconfirmed Thai coverage, and the SET's own free API is an ESG dataset rather than a quote feed.
+
+DCAfolio uses **Yahoo Finance's undocumented chart endpoint** anyway, as a risk the project owner
+accepted in writing ([`context.md`](context.md) §8.1). It is not a public API, using it is outside
+Yahoo's terms, and it can stop working on any day. The evaluation, the measurements behind it and
+the conditions for reversing the decision are in
 [`docs/specs/market-data-providers.md`](docs/specs/market-data-providers.md).
 
-So `MockMarketDataProvider` is the documented default. It derives a deterministic, obviously
-synthetic price from the symbol, reports market status as `unknown` rather than guessing, and is
-labelled *"Mock data — not real prices"* everywhere it appears. **No real stock price is
-fabricated.** Total invested, share counts and average cost are always real — they come from your
-own transactions.
+`MockMarketDataProvider` remains, one secret away (`MARKET_DATA_PROVIDER=mock`). It derives a
+deterministic, obviously synthetic price from the symbol, reports market status as `unknown`
+rather than guessing, and is labelled *"Mock data — not real prices"* everywhere it appears.
 
-Adding a verified provider later means writing one class and registering it in
-`apps/web/src/features/market-data/provider.ts`. Nothing else changes.
+**No real stock price is fabricated by either provider.** Total invested, share counts and average
+cost are always real — they come from your own transactions.
+
+### The Sync button
+
+The dashboard's market strip carries a **Sync prices** button. It invokes the `market-data` Edge
+Function, which fetches only the symbols you actually hold, writes them to the price cache, and
+reports what it achieved — how many prices are fresh, how many are re-published cache entries, and
+why. A refresh that fetched nothing must not read like one that worked.
+
+The browser never calls the provider itself. A **15-minute cooldown is enforced inside the
+function**, not by disabling the button: a page-reload loop presses nothing and would otherwise
+reach the provider on every load. A refused call comes back as "prices are recent, try again in
+*n* minutes".
+
+A price fetched while the SET is closed is the previous close however fresh the request was, so it
+is stored flagged and shown as cached.
 
 When a provider fails, the Edge Function re-publishes the last successful price marked stale; the
 dashboard keeps working and says the number is cached. A price older than 30 minutes is treated
@@ -315,7 +332,7 @@ the full procedure, including why the site must be served over HTTPS.
 
 Deliberately **not** in V1, but the architecture is ready for each:
 
-- A verified real market-data provider — one class, registered in one place.
+- A provider whose terms actually permit this use, replacing the accepted risk in `context.md` §8.1.
 - Sell transactions and realised profit/loss — a `type` column plus changes confined to the
   position aggregator.
 - Dividends and stock splits.
@@ -335,7 +352,7 @@ Each is a scope change requiring explicit approval before any work starts. See
 | [`CLAUDE.md`](CLAUDE.md) | Operating rules for anyone (or any agent) working in this repository |
 | [`context.md`](context.md) | Why DCAfolio exists, the locked V1 scope, the principles |
 | [`docs/specs/design.md`](docs/specs/design.md) | Product and technical design |
-| [`docs/specs/market-data-providers.md`](docs/specs/market-data-providers.md) | Provider evaluation and the decision to ship a mock |
+| [`docs/specs/market-data-providers.md`](docs/specs/market-data-providers.md) | Provider evaluation, and the accepted risk behind using Yahoo |
 | [`docs/specs/security-review.md`](docs/specs/security-review.md) | RLS, secrets and dependency review |
 | [`docs/plans/implementation-plan.md`](docs/plans/implementation-plan.md) | The twelve phases and what each one verified |
 | [`docs/plans/deployment-runbook.md`](docs/plans/deployment-runbook.md) | Step-by-step deployment |

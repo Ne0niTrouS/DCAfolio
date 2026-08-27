@@ -134,10 +134,42 @@ Market data is **untrusted, optional and isolated**.
   provider. **The default is a free provider.**
 - Before adopting a real production provider we must verify: Thai SET symbol support, current
   availability, free-tier limits, API terms, personal-use compatibility, and whether an API key
-  is required. Nothing is assumed to be free. **Unauthorized scraping is not permitted.**
+  is required. Nothing is assumed to be free.
 - If no reliable free provider can be verified, a **`MockMarketDataProvider`** is used for
   development and is clearly labelled as mock in the UI. **Real stock prices are never
   fabricated.**
+
+### 8.1 Accepted risk: the Yahoo Finance endpoints
+
+This rule previously read *"unauthorized scraping is not permitted"*, and on that basis every
+candidate was rejected and V1 shipped with mock prices only. **The project owner has since
+decided, knowing what follows, to use Yahoo Finance's undocumented quote endpoints** so that
+DCAfolio shows real SET prices. Recorded here so the decision is not mistaken for an oversight.
+
+What is being accepted:
+
+- The endpoint is **undocumented, unsupported and not offered as a public API**. There is no
+  agreement behind it and no notice period. It can change shape or stop answering on any day.
+- Using it is **outside Yahoo's terms of service**. That is a real cost, weighed and accepted for
+  a single-user personal tool, not a technicality that was overlooked.
+- The data is **as good as Yahoo's**, which is a redistribution of SET data and is not the
+  exchange's official record. It is adequate for tracking a personal position and is not adequate
+  for anything that must reconcile with a broker statement.
+
+What that decision does **not** relax:
+
+- **Real stock prices are still never fabricated.** When the provider cannot answer, the cached
+  price is re-published as stale — no number is invented, and `mock` prices stay labelled mock.
+- **The browser never calls the provider.** All requests are made by the `market-data` Edge
+  Function, which keeps the reader's own address out of it and leaves one auditable caller.
+- **Request volume stays small and deliberate.** Only held symbols are fetched, and a cooldown
+  (`SYNC_COOLDOWN_MINUTES`, 15) stands between the refresh button and the provider so that a
+  reload loop cannot turn into a request flood.
+- The provider stays behind `MarketDataProvider`. Withdrawing this decision means setting
+  `MARKET_DATA_PROVIDER=mock` and changes nothing else.
+
+The full evaluation, the evidence behind it and the conditions for reversing it are in
+[`docs/specs/market-data-providers.md`](docs/specs/market-data-providers.md).
 - Failure path: provider fails -> use the latest cached successful price -> mark it stale ->
   show last-updated time -> keep the dashboard functional. **Cached data is never presented as
   real-time.**
