@@ -33,57 +33,80 @@ export function PositionList({
 }) {
   const t = useT();
   const [expanded, setExpanded] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const share = (position: Position) =>
+    position.allocationPercent === null
+      ? UNAVAILABLE
+      : formatPercent(position.allocationPercent);
 
   const segments = positions.map((position) => ({
     id: position.stockId,
     label: position.symbol,
     percent: position.allocationPercent ?? 0,
-    to: `/stocks/${position.symbol}`,
-    description: `${position.symbol} ${
-      position.allocationPercent === null
-        ? UNAVAILABLE
-        : formatPercent(position.allocationPercent)
-    }`,
+    description: `${position.symbol} ${share(position)}`,
   }));
 
-  // The ring always shows every holding; only the list below it is capped.
-  const visible = expanded ? positions : positions.slice(0, VISIBLE_POSITIONS);
+  // The ring always shows every holding; only the list below it is capped. A
+  // slice pressed from outside the cap is added back, so pressing it never
+  // leaves the exact figure with nowhere to appear.
+  const capped = positions.slice(0, VISIBLE_POSITIONS);
+  const pressed = positions.find(
+    (position) => position.stockId === selectedId && !capped.includes(position),
+  );
+  const visible = expanded ? positions : pressed ? [...capped, pressed] : capped;
 
-  const largest = positions[0];
+  // Nothing pressed yet shows the biggest holding, which is the answer to the
+  // question somebody looking at an allocation ring most often has.
+  const selected =
+    positions.find((position) => position.stockId === selectedId) ?? positions[0];
+
   const summary = positions
-    .map(
-      (position) =>
-        `${position.symbol} ${position.allocationPercent === null ? UNAVAILABLE : formatPercent(position.allocationPercent)}`,
-    )
+    .map((position) => `${position.symbol} ${share(position)}`)
     .join(', ');
 
   return (
     <div className="flex flex-col items-center gap-6 lg:flex-row lg:items-start">
       <DonutChart
         segments={segments}
-        centerValue={
-          largest?.allocationPercent === null || largest === undefined
-            ? UNAVAILABLE
-            : formatPercent(largest.allocationPercent, 0)
-        }
-        centerLabel={largest?.symbol ?? ''}
+        selectedId={selectedId}
+        onSelect={setSelectedId}
+        // The exact share, not a rounded one: reading it off the ring is the
+        // reason for pressing a slice, and "15%" for 15.13% would send anyone
+        // who needs the real figure hunting for it in the list anyway.
+        centerValue={selected === undefined ? UNAVAILABLE : share(selected)}
+        centerLabel={selected?.symbol ?? ''}
+        {...(selected
+          ? {
+              centerTo: `/stocks/${selected.symbol}`,
+              centerDescription: `${selected.symbol} ${share(selected)}`,
+            }
+          : {})}
         summary={summary}
       />
 
       <div className="min-w-0 flex-1">
         <ul className="flex flex-col gap-1">
-          {visible.map((position, index) => (
+          {visible.map((position) => (
             <li key={position.stockId}>
               <Link
                 to={`/stocks/${position.symbol}`}
-                className="block rounded-xl px-2 py-2 transition-colors hover:bg-surface-sunken"
+                onFocus={() => setSelectedId(position.stockId)}
+                aria-current={position.stockId === selectedId ? 'true' : undefined}
+                className={`block rounded-xl px-2 py-2 transition-colors hover:bg-surface-sunken ${
+                  position.stockId === selectedId
+                    ? 'bg-surface-sunken ring-1 ring-border-subtle'
+                    : ''
+                }`}
               >
                 <div className="flex items-baseline justify-between gap-3">
                   <span className="flex min-w-0 items-center gap-2">
                     <span
                       aria-hidden="true"
                       className="size-2.5 shrink-0 rounded-full"
-                      style={{ backgroundColor: donutColor(index) }}
+                      // Keyed to the ring, not to this row: a slice pressed from
+                      // outside the cap is appended here out of order.
+                      style={{ backgroundColor: donutColor(positions.indexOf(position)) }}
                     />
                     <span className="truncate font-semibold text-ink">{position.symbol}</span>
                   </span>
