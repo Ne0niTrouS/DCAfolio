@@ -60,14 +60,11 @@ export async function invokeEdgeFunction<T>(
   const payload: unknown = await response.json().catch(() => null);
   const key = keyFrom((payload as { error?: unknown } | null)?.error);
 
-  // `error.generic` means the reason was not something this app knows how to
-  // say. Swallowing it entirely is what makes a failure unfixable: the user
-  // gets a sentence with no information and nobody else gets anything at all.
-  // The raw reason goes to the console — a developer can read it, and it never
-  // reaches the interface.
-  if (key === 'error.generic') {
-    console.error(`Edge Function "${name}" failed with ${response.status}:`, payload);
-  }
+  // Every failure is logged, not only the unrecognised ones. A translated
+  // sentence is what the reader needs and all they can act on, but it is not
+  // enough to fix anything by: two different faults can share one sentence.
+  // The reply body says which, and it belongs somewhere it can be read.
+  console.error(`Edge Function "${name}" failed with ${response.status}:`, payload);
 
   throw new EdgeFunctionError(key);
 }

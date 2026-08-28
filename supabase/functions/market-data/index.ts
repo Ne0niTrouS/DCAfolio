@@ -189,7 +189,7 @@ async function handle(request: Request): Promise<Response> {
     // The raw Postgres message goes to the function log, not to the browser: it
     // names tables and roles, and the reader can do nothing with it anyway.
     console.error('Reading held stocks failed:', heldError);
-    return json({ error: 'error.databaseUnavailable' }, 500);
+    return json({ error: 'error.databaseUnavailable', stage: 'read-transactions' }, 500);
   }
 
   const stocks = new Map<string, string>();
@@ -298,7 +298,7 @@ async function handle(request: Request): Promise<Response> {
     const { error: insertError } = await supabase.from('market_prices').insert(rows);
     if (insertError) {
       console.error('Writing the price cache failed:', insertError);
-      return json({ error: 'error.databaseUnavailable' }, 500);
+      return json({ error: 'error.databaseUnavailable', stage: 'write-prices' }, 500);
     }
   }
 
