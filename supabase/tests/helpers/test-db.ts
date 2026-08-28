@@ -57,6 +57,7 @@ export const MIGRATIONS = [
   '0003_rls.sql',
   '0004_seed_stocks.sql',
   '0005_more_stocks.sql',
+  '0006_service_role_grants.sql',
 ];
 
 export function migrationPath(migration: string): string {

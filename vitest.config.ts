@@ -40,6 +40,11 @@ export default defineConfig({
           globals: true,
           setupFiles: ['./vitest.setup.ts'],
           include: ['src/**/*.test.{ts,tsx}'],
+          // Booting jsdom and rendering a route costs more than the 5s default
+          // allows once several projects run at once, and a test that fails for
+          // want of time says nothing about the code. Nothing is waived: every
+          // assertion still has to pass, and a genuinely hung test still fails.
+          testTimeout: 20_000,
           // Placeholder credentials so modules that assert on configuration can
           // load. The Supabase client itself is mocked in tests.
           env: {

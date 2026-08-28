@@ -154,6 +154,58 @@ const yahooProvider: MarketDataProvider = {
   },
 };
 
+/**
+ * The privileged key, whichever form this project issues.
+ *
+ * Supabase has two generations of API keys. Older projects have a legacy JWT in
+ * `SUPABASE_SERVICE_ROLE_KEY`; newer ones issue `sb_secret_…` keys and can have
+ * the legacy pair disabled, at which point that variable is still injected and
+ * still populated but the API rejects it as "Invalid API key" — a failure that
+ * looks exactly like a permissions problem and is not one.
+ *
+ * `SUPABASE_SECRET_KEYS` holds a JSON array when several are live for rotation;
+ * any entry works, so the first is taken. The legacy variable stays last so
+ * nothing changes for a project that only has that one.
+ */
+function looksLikeKey(value: unknown): value is string {
+  // A legacy key is a JWT; a current one is prefixed. Checking the shape stops
+  // a JSON blob being handed to the API as though it were a credential — which
+  // fails as "Invalid API key" and reads exactly like a revoked key.
+  return typeof value === 'string' && (value.startsWith('sb_secret_') || value.startsWith('eyJ'));
+}
+
+function resolveServiceKey(): { key: string; source: string } | null {
+  const candidates = ['SUPABASE_SECRET_KEY', 'SUPABASE_SERVICE_ROLE_KEY', 'SUPABASE_SECRET_KEYS'];
+
+  for (const source of candidates) {
+    const raw = Deno.env.get(source)?.trim();
+    if (!raw) continue;
+    if (looksLikeKey(raw)) return { key: raw, source };
+
+    // `SUPABASE_SECRET_KEYS` carries JSON — an object on this project, an array
+    // elsewhere — so the key is looked for among the values rather than assumed
+    // to be at any particular path.
+    try {
+      const parsed: unknown = JSON.parse(raw);
+      const values = Array.isArray(parsed)
+        ? parsed
+        : typeof parsed === 'object' && parsed
+          ? Object.values(parsed)
+          : [];
+
+      for (const value of values) {
+        if (looksLikeKey(value)) return { key: value, source };
+        const inner = (value as { api_key?: unknown })?.api_key;
+        if (looksLikeKey(inner)) return { key: inner, source };
+      }
+    } catch {
+      // Not JSON either; try the next candidate rather than give up.
+    }
+  }
+
+  return null;
+}
+
 function resolveProvider(id: string): MarketDataProvider {
   if (id === YAHOO_PROVIDER_ID) return yahooProvider;
   if (id !== 'mock') {
@@ -166,10 +218,10 @@ async function handle(request: Request): Promise<Response> {
   // Secrets stay server-side. The service-role key bypasses RLS, which is why
   // it must never be exposed to a browser or placed in a VITE_ variable.
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
-  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const service = resolveServiceKey();
   const providerId = Deno.env.get('MARKET_DATA_PROVIDER') ?? 'mock';
 
-  if (!supabaseUrl || !serviceRoleKey) {
+  if (!supabaseUrl || !service) {
     return json({ error: 'error.serverConfig' }, 500);
   }
 
@@ -177,7 +229,7 @@ async function handle(request: Request): Promise<Response> {
     return json({ error: 'error.generic' }, 405);
   }
 
-  const supabase = createClient(supabaseUrl, serviceRoleKey);
+  const supabase = createClient(supabaseUrl, service.key);
 
   // Only refresh stocks somebody actually holds — an unheld symbol costs a
   // request and produces a price nothing on the dashboard reads.
@@ -188,8 +240,23 @@ async function handle(request: Request): Promise<Response> {
   if (heldError) {
     // The raw Postgres message goes to the function log, not to the browser: it
     // names tables and roles, and the reader can do nothing with it anyway.
-    console.error('Reading held stocks failed:', heldError);
-    return json({ error: 'error.databaseUnavailable', stage: 'read-transactions' }, 500);
+    console.error(`Reading held stocks failed (key from ${service.source}):`, heldError);
+    // The variable the key came from, never the key. Which of the two key
+    // generations is in play is the difference between a permissions problem
+    // and a rejected credential, and the two read identically from outside.
+    return json(
+      {
+        error: 'error.databaseUnavailable',
+        stage: 'read-transactions',
+        keySource: service.source,
+        // The Postgres code, never its message: `42501` says a GRANT is
+        // missing and `PGRST200` says the query is wrong, and the two are
+        // indistinguishable from the sentence a reader is shown. The message
+        // itself names tables and roles and stays in the function log.
+        code: heldError.code,
+      },
+      500,
+    );
   }
 
   const stocks = new Map<string, string>();

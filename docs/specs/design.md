@@ -920,3 +920,26 @@ The architecture is prepared for, but V1 deliberately does not implement:
   intentional gate.
 
 Each of these is a scope change requiring explicit approval before any work starts.
+
+### 9.7 Privileges the Edge Functions need
+
+`service_role` bypasses Row Level Security, which is easy to read as *"can do anything"*. It
+cannot. RLS and table privileges are separate mechanisms: a role that bypasses every policy still
+needs a `GRANT`, and without one Postgres answers `42501 permission denied` before a policy is
+ever consulted.
+
+Migration `0006_service_role_grants.sql` states them explicitly rather than relying on whatever
+default privileges a project happens to carry:
+
+| Table | `service_role` may |
+| --- | --- |
+| `transactions` | SELECT — which symbols are held |
+| `stocks` | SELECT, INSERT — the embed in that query, and `stock-admin` |
+| `market_prices` | SELECT, INSERT — read the newest capture, append new ones |
+| `latest_market_prices` | SELECT |
+| `profiles` | nothing |
+
+No UPDATE and no DELETE anywhere. Neither function needs them, and a service-role write of that
+kind would pass straight through the policies protecting a user's own records.
+`supabase/tests/service-role.test.ts` holds the schema to exactly this list, including the two
+absences.
