@@ -2,13 +2,15 @@ import type { MarketState } from '@dcafolio/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import type { TranslationKey } from '@/i18n/en';
-import { invokeEdgeFunction } from '@/lib/edge-function';
+import { EdgeFunctionError, invokeEdgeFunction } from '@/lib/edge-function';
 import { queryKeys } from '@/lib/query-client';
 
 /** What the `market-data` Edge Function reports about one refresh. */
 export type SyncResult = {
   provider: string;
+  /** Prices that came back live from the provider. */
   captured: number;
+  /** Holdings that fell back to a re-published cache entry. */
   stale: number;
   skipped?: boolean;
   retryInMinutes?: number;
@@ -16,42 +18,10 @@ export type SyncResult = {
   providerFailed?: boolean;
 };
 
-export type SyncMessage = {
-  key: TranslationKey;
-  params?: Record<string, string | number>;
-};
-
-/**
- * Says what a refresh actually achieved.
- *
- * Kept apart from the mutation because "how many prices are real" is exactly
- * the thing that must not be glossed over, and a pure function can be tested
- * against every combination the server can return. A refresh that fetched
- * nothing must never read like one that worked.
- */
-export function syncMessage(result: SyncResult): SyncMessage {
-  if (result.skipped) {
-    return { key: 'market.syncSkipped', params: { minutes: result.retryInMinutes ?? 0 } };
-  }
-
-  if (result.captured === 0 && result.stale === 0) {
-    return { key: 'market.syncNothing' };
-  }
-
-  if (result.captured === 0) {
-    // Every price on screen is now a re-published cache entry, whether the
-    // provider was down or the market simply shut.
-    return {
-      key: result.providerFailed ? 'market.syncFailed' : 'market.syncCached',
-      params: { count: result.stale },
-    };
-  }
-
-  if (result.stale > 0) {
-    return { key: 'market.syncPartial', params: { count: result.captured, cached: result.stale } };
-  }
-
-  return { key: 'market.syncDone', params: { count: result.captured } };
+/** The phrase key behind a failed sync, or null when it did not fail. */
+export function syncErrorKey(error: unknown): TranslationKey | null {
+  if (!error) return null;
+  return error instanceof EdgeFunctionError ? error.key : 'error.generic';
 }
 
 export function syncPrices(): Promise<SyncResult> {

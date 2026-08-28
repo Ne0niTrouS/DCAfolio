@@ -3,7 +3,7 @@ import { UNAVAILABLE, formatMoney } from '@dcafolio/shared';
 import type { ReactNode } from 'react';
 
 import { SignedMoney, SignedPercent } from '@/components/SignedValue';
-import { CalendarIcon, PieIcon, TrendUpIcon, WalletIcon } from '@/components/icons';
+import { PieIcon, TrendUpIcon, WalletIcon } from '@/components/icons';
 import { useT } from '@/i18n/use-language';
 
 function Card({
@@ -33,13 +33,20 @@ function Card({
   );
 }
 
-/** The five numbers that answer: what did I put in, what is it worth, am I up? */
+/**
+ * The four numbers that answer: what did I put in, what is it worth, am I up?
+ *
+ * Deliberately four. A DCA-per-month card used to sit here, and it described
+ * the habit rather than the holding — an average of past contributions, next to
+ * figures that are all current state. `computePortfolio` still returns
+ * `dcaPerMonth` for wherever a dedicated DCA view is built.
+ */
 export function KpiCards({ portfolio }: { portfolio: Portfolio }) {
   const t = useT();
   const partial = portfolio.hasIncompletePricing;
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
       <Card
         label={t('dashboard.portfolioValue')}
         icon={<TrendUpIcon />}
@@ -60,12 +67,6 @@ export function KpiCards({ portfolio }: { portfolio: Portfolio }) {
 
       <Card label={t('dashboard.returnPercent')} icon={<PieIcon />}>
         <SignedPercent value={portfolio.returnPercent} />
-      </Card>
-
-      <Card label={t('dashboard.dcaPerMonth')} icon={<CalendarIcon />}>
-        <span className="tnum text-ink">
-          {portfolio.dcaPerMonth === null ? UNAVAILABLE : formatMoney(portfolio.dcaPerMonth)}
-        </span>
       </Card>
     </div>
   );

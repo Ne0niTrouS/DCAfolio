@@ -79,6 +79,25 @@ export function formatDate(isoDate: string | null | undefined): string {
 }
 
 /**
+ * `27/08/2026 16:35` from an ISO timestamp, in the viewer's local timezone.
+ *
+ * For the moments where "4 minutes ago" is not enough: a price the app calls
+ * out of date has to say *when*, or the reader cannot judge how out of date.
+ * 24-hour, because a stale-price warning is not the place to make somebody
+ * work out am from pm.
+ */
+export function formatDateTime(isoTimestamp: string | null | undefined): string {
+  if (!isoTimestamp) return UNAVAILABLE;
+
+  const at = new Date(isoTimestamp);
+  if (Number.isNaN(at.getTime())) return UNAVAILABLE;
+
+  const pad = (value: number) => String(value).padStart(2, '0');
+  const date = `${pad(at.getDate())}/${pad(at.getMonth() + 1)}/${at.getFullYear()}`;
+  return `${date} ${pad(at.getHours())}:${pad(at.getMinutes())}`;
+}
+
+/**
  * Today as an ISO `YYYY-MM-DD` string in the viewer's local timezone.
  *
  * `toISOString()` is deliberately avoided: it converts to UTC, which shows

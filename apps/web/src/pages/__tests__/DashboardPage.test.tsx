@@ -89,14 +89,16 @@ describe('DashboardPage', () => {
     expect(screen.getByRole('status')).toBeInTheDocument();
   });
 
-  it('invites a first purchase when nothing has been recorded', async () => {
+  it('says the portfolio is empty without offering to fill it', async () => {
+    // The dashboard reports the portfolio; recording a purchase belongs to
+    // History, and this screen no longer suggests otherwise.
     render();
 
     expect(await screen.findByText(phrase('dashboard.emptyTitle'))).toBeInTheDocument();
     expect(screen.getByText(phrase('dashboard.emptyBody'))).toBeInTheDocument();
     expect(
-      screen.getAllByRole('button', { name: phrase('common.addPurchase') }).length,
-    ).toBeGreaterThan(0);
+      screen.queryByRole('button', { name: phrase('common.addPurchase') }),
+    ).not.toBeInTheDocument();
   });
 
   it('reports a failure to load without blanking the page', async () => {
@@ -117,6 +119,33 @@ describe('DashboardPage', () => {
     expect(screen.getAllByText('฿12,500.00').length).toBeGreaterThan(0);
     expect(screen.getAllByText('+฿500.00').length).toBeGreaterThan(0);
     expect(screen.getAllByText('+4.00%').length).toBeGreaterThan(0);
+  });
+
+  it('puts cost and current value next to each other', async () => {
+    state.transactions = [TRANSACTION_ROW];
+    state.prices = [priceRow()];
+    render();
+
+    expect(await screen.findByText(phrase('dashboard.costVsValue'))).toBeInTheDocument();
+    expect(screen.getByText(phrase('dashboard.totalCost'))).toBeInTheDocument();
+    expect(screen.getByText(phrase('dashboard.currentValue'))).toBeInTheDocument();
+  });
+
+  it('no longer reports a monthly DCA average beside current-state figures', async () => {
+    state.transactions = [TRANSACTION_ROW];
+    state.prices = [priceRow()];
+    render();
+
+    await screen.findByText(phrase('dashboard.portfolioValue'));
+    expect(screen.queryByText(phrase('dashboard.dcaPerMonth'))).not.toBeInTheDocument();
+  });
+
+  it('will not chart a trend from a single purchase date', async () => {
+    state.transactions = [TRANSACTION_ROW];
+    state.prices = [priceRow()];
+    render();
+
+    expect(await screen.findByText(phrase('dashboard.notEnoughHistory'))).toBeInTheDocument();
   });
 
   it('signs a loss explicitly rather than relying on colour', async () => {
@@ -156,7 +185,7 @@ describe('DashboardPage', () => {
 
     expect(await screen.findByText(phrase('market.mockBadge'))).toBeInTheDocument();
     expect(
-      screen.getByText(phrase('market.provider', { provider: 'mock' })),
+      screen.getByText(phrase('market.source', { source: 'Mock provider' })),
     ).toBeInTheDocument();
   });
 
@@ -165,8 +194,11 @@ describe('DashboardPage', () => {
     state.pricesError = new Error('network down');
     render();
 
+    // Nothing loaded because the request failed is not the same as nothing
+    // stored, and the panel must not report the second when it means the first.
     expect(await screen.findByText(phrase('dashboard.totalInvested'))).toBeInTheDocument();
-    expect(screen.getByText(phrase('market.cachedBadge'))).toBeInTheDocument();
+    expect(screen.getByText(phrase('market.pricesUnavailable'))).toBeInTheDocument();
+    expect(screen.queryByText(phrase('market.noPricesYet'))).not.toBeInTheDocument();
   });
 
   it('lists positions and recent transactions', async () => {

@@ -57,7 +57,7 @@ describe('dictionaries', () => {
       'Edit CPALL on 09/08/2026',
     );
     expect(translate('th', 'purchase.perShare', { value: '฿62.50' })).toBe('฿62.50/หุ้น');
-    expect(translate('en', 'market.provider')).toBe('Provider: {provider}');
+    expect(translate('en', 'market.source')).toBe('Source: {source}');
   });
 });
 
@@ -182,8 +182,8 @@ describe('language across the signed-in application', () => {
   });
 
   it('opens the Add Purchase modal in the application language', async () => {
-    renderApp();
-    await screen.findByRole('heading', { name: th['dashboard.title'] });
+    renderApp('/history');
+    await screen.findByRole('heading', { name: th['history.title'] });
 
     await switchToEnglish();
     const [addPurchase] = screen.getAllByRole('button', { name: 'Add Purchase' });

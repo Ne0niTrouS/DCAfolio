@@ -31,7 +31,12 @@ export function HistoryPage() {
 
   return (
     <section className="flex flex-col gap-5">
-      <h1 className="text-3xl font-semibold tracking-tight text-ink">{t('history.title')}</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-3xl font-semibold tracking-tight text-ink">{t('history.title')}</h1>
+        {/* The only place a purchase is recorded from. It used to sit in the
+            app chrome, which put it on every screen including the dashboard. */}
+        <Button onClick={() => setAdding(true)}>{t('common.addPurchase')}</Button>
+      </div>
 
       <div className="rounded-2xl border border-border-subtle bg-surface-raised p-4 shadow-sm">
         <HistoryFilters

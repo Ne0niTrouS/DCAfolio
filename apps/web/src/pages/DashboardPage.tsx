@@ -1,25 +1,22 @@
-import { todayIsoDate } from '@dcafolio/shared';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 
-import { Button } from '@/components/Button';
 import { Panel } from '@/components/Panel';
-import { PieIcon, TrendUpIcon } from '@/components/icons';
+import { PieIcon } from '@/components/icons';
 import { EmptyState, ErrorState, LoadingState } from '@/components/states';
 import { MarketStatusStrip } from '@/features/market-data/MarketStatusStrip';
+import { syncStateFrom } from '@/features/market-data/market-status';
 import { useLatestPrices } from '@/features/market-data/use-latest-prices';
 import { useMarketStatus } from '@/features/market-data/use-market-status';
-import { syncMessage, useSyncPrices } from '@/features/market-data/use-sync-prices';
-import { InvestedChart } from '@/features/portfolio/InvestedChart';
+import { syncErrorKey, useSyncPrices } from '@/features/market-data/use-sync-prices';
+import { CostVsValueCard } from '@/features/portfolio/CostVsValueCard';
+import { InvestedPanel } from '@/features/portfolio/InvestedPanel';
 import { KpiCards } from '@/features/portfolio/KpiCards';
 import { PositionList } from '@/features/portfolio/PositionList';
 import { RecentTransactions } from '@/features/portfolio/RecentTransactions';
 import { SummaryCard } from '@/features/portfolio/SummaryCard';
 import { investedSeries } from '@/features/portfolio/invested-series';
 import { usePortfolio } from '@/features/portfolio/use-portfolio';
-import { TransactionDialog } from '@/features/transactions/TransactionDialog';
-import { useStocks } from '@/features/transactions/queries';
 import { useT } from '@/i18n/use-language';
-import { EdgeFunctionError } from '@/lib/edge-function';
 import { mapDataError } from '@/lib/errors';
 
 export function DashboardPage() {
@@ -27,21 +24,13 @@ export function DashboardPage() {
   const { portfolio, transactions, isLoading, error, refetch, isEmpty } = usePortfolio();
   const pricesQuery = useLatestPrices();
   const marketStatus = useMarketStatus();
-  const { data: stocks = [] } = useStocks();
   const sync = useSyncPrices();
-  const [adding, setAdding] = useState(false);
 
   const series = useMemo(() => investedSeries(transactions), [transactions]);
 
-  // A refresh that fetched nothing must not read like one that worked, so the
-  // strip reports the outcome rather than just going quiet.
-  let syncNote: string | undefined;
-  if (sync.isError) {
-    syncNote = t(sync.error instanceof EdgeFunctionError ? sync.error.key : 'error.generic');
-  } else if (sync.data) {
-    const { key, params } = syncMessage(sync.data);
-    syncNote = t(key, params);
-  }
+  // Derived from the mutation rather than tracked separately, so the panel
+  // cannot claim a success the request never had.
+  const syncState = syncStateFrom(sync.data, syncErrorKey(sync.error), sync.isPending);
 
   return (
     <section className="flex flex-col gap-5">
@@ -62,25 +51,24 @@ export function DashboardPage() {
         />
       ) : null}
 
+      {/* No call to action here. Purchases are recorded from History; the
+          dashboard reports the portfolio rather than inviting edits to it. */}
       {!isLoading && !error && isEmpty ? (
-        <EmptyState
-          title={t('dashboard.emptyTitle')}
-          description={t('dashboard.emptyBody')}
-          action={<Button onClick={() => setAdding(true)}>{t('common.addPurchase')}</Button>}
-        />
+        <EmptyState title={t('dashboard.emptyTitle')} description={t('dashboard.emptyBody')} />
       ) : null}
 
       {!isLoading && !error && !isEmpty ? (
         <>
           <KpiCards portfolio={portfolio} />
 
+          <CostVsValueCard portfolio={portfolio} />
+
           <MarketStatusStrip
             prices={pricesQuery.data ?? []}
             marketState={marketStatus.data?.state ?? 'unknown'}
             failed={pricesQuery.isError}
             onSync={() => sync.mutate()}
-            syncing={sync.isPending}
-            syncNote={syncNote}
+            sync={syncState}
           />
 
           <div className="grid gap-4 xl:grid-cols-2">
@@ -91,15 +79,7 @@ export function DashboardPage() {
               />
             </Panel>
 
-            <Panel title={t('dashboard.investedOverTime')} icon={<TrendUpIcon />}>
-              {series.length > 0 ? (
-                <InvestedChart points={series} label={t('dashboard.investedOverTime')} />
-              ) : (
-                <p className="py-10 text-center text-sm text-ink-muted">
-                  {t('dashboard.noChartData')}
-                </p>
-              )}
-            </Panel>
+            <InvestedPanel points={series} />
           </div>
 
           <div className="grid gap-4 xl:grid-cols-[2fr_1fr]">
@@ -107,14 +87,6 @@ export function DashboardPage() {
             <SummaryCard portfolio={portfolio} />
           </div>
         </>
-      ) : null}
-
-      {adding ? (
-        <TransactionDialog
-          stocks={stocks}
-          today={todayIsoDate()}
-          onClose={() => setAdding(false)}
-        />
       ) : null}
     </section>
   );

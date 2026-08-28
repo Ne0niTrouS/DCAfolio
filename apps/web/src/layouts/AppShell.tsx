@@ -1,4 +1,4 @@
-import { APP_CREDIT, APP_NAME, todayIsoDate } from '@dcafolio/shared';
+import { APP_CREDIT, APP_NAME } from '@dcafolio/shared';
 import { useCallback, useRef, useState, type ComponentType } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 
@@ -12,12 +12,10 @@ import {
   ListIcon,
   LogoutIcon,
   MenuIcon,
-  PlusIcon,
 } from '@/components/icons';
 import { mapAuthError } from '@/features/auth/auth-errors';
 import { useAuth } from '@/features/auth/use-auth';
-import { TransactionDialog } from '@/features/transactions/TransactionDialog';
-import { useStocks } from '@/features/transactions/queries';
+import { useAutoSyncOnLogin } from '@/features/market-data/use-auto-sync';
 import type { TranslationKey } from '@/i18n/en';
 import { useLanguage } from '@/i18n/use-language';
 import { useDismiss } from '@/lib/use-dismiss';
@@ -124,17 +122,23 @@ function AccountMenu({ email, onSignOut }: { email: string | null; onSignOut: ()
 
 /**
  * Dark sidebar, dark navbar, light workspace. On a phone the sidebar gives way
- * to a bottom bar and a floating action, because adding a purchase must stay
- * one tap away from every screen.
+ * to a bottom bar.
+ *
+ * There is no global "add purchase" action. Recording a purchase belongs to
+ * History, which is where the record being added to already lives; a button in
+ * the chrome put it on the dashboard too, where the job is to report the
+ * portfolio rather than to invite edits to it.
  */
 export function AppShell() {
   const { signOut, user } = useAuth();
   const { t } = useLanguage();
-  const { data: stocks = [] } = useStocks();
   const [signOutError, setSignOutError] = useState<TranslationKey | null>(null);
-  const [adding, setAdding] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const pageTitle = usePageTitle();
+
+  // Once per sign-in, not once per visit to the dashboard: this shell stays
+  // mounted while navigating, and the marker it keeps covers a page reload.
+  useAutoSyncOnLogin();
 
   async function handleSignOut() {
     setSignOutError(null);
@@ -179,15 +183,6 @@ export function AppShell() {
 
         <button
           type="button"
-          onClick={() => setAdding(true)}
-          className="mt-6 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-accent-bright to-accent px-4 text-sm font-semibold text-white shadow-sm shadow-accent/25 transition-colors hover:from-accent hover:to-accent-strong"
-        >
-          <PlusIcon className="size-4.5" />
-          {t('common.addPurchase')}
-        </button>
-
-        <button
-          type="button"
           onClick={handleSignOut}
           className="mt-auto inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-nav-border px-4 text-sm font-medium text-nav-ink transition-colors hover:bg-nav-hover hover:text-white"
         >
@@ -228,15 +223,6 @@ export function AppShell() {
           {APP_NAME} © {APP_CREDIT} · {t('common.footerTagline')}
         </footer>
 
-        <button
-          type="button"
-          onClick={() => setAdding(true)}
-          className="fixed bottom-20 right-4 z-40 inline-flex min-h-12 items-center gap-2 rounded-full bg-gradient-to-b from-accent-bright to-accent px-5 text-sm font-semibold text-white shadow-lg transition-colors hover:from-accent hover:to-accent-strong md:hidden"
-        >
-          <PlusIcon className="size-4.5" />
-          {t('common.addPurchase')}
-        </button>
-
         <nav
           aria-label="Main"
           className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 bg-nav md:hidden"
@@ -259,13 +245,6 @@ export function AppShell() {
         </nav>
       </div>
 
-      {adding ? (
-        <TransactionDialog
-          stocks={stocks}
-          today={todayIsoDate()}
-          onClose={() => setAdding(false)}
-        />
-      ) : null}
     </div>
   );
 }

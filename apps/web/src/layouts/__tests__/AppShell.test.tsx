@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { Route, Routes } from 'react-router-dom';
@@ -67,26 +67,15 @@ describe('AppShell', () => {
     expect(screen.getByRole('main')).toHaveAttribute('id', 'main');
   });
 
-  it('reaches Add Purchase from any screen', async () => {
+  it('offers no Add Purchase action in the chrome', () => {
+    // It used to live here, which put it on every screen — including the
+    // dashboard, whose job is to report the portfolio rather than to invite
+    // edits to it. Recording a purchase belongs to History.
     render(['/export']);
 
-    const [addPurchase] = screen.getAllByRole('button', { name: phrase('common.addPurchase') });
-    await userEvent.click(addPurchase!);
-
-    expect(await screen.findByRole('dialog')).toHaveAccessibleName(phrase('purchase.addTitle'));
-  });
-
-  it('closes the add dialog on Escape without leaving the page', async () => {
-    render();
-
-    const [addPurchase] = screen.getAllByRole('button', { name: phrase('common.addPurchase') });
-    await userEvent.click(addPurchase!);
-    await screen.findByRole('dialog');
-
-    await userEvent.keyboard('{Escape}');
-
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    expect(screen.getByText('Dashboard content')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: phrase('common.addPurchase') }),
+    ).not.toBeInTheDocument();
   });
 
   it('signs out from the sidebar', async () => {

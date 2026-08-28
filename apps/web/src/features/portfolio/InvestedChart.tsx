@@ -28,11 +28,11 @@ function compactMoney(value: number): string {
 /**
  * Cumulative invested amount over time, as a filled line.
  *
- * A single purchase produces one point, which cannot be a line — that case is
- * drawn as a flat segment so the panel still says something true rather than
- * showing an empty box. Ratios here are layout, not money, so plain `number`
- * arithmetic is fine; every figure the user reads is formatted from the
- * decimal string.
+ * Requires at least two points; `InvestedPanel` is what enforces that. One
+ * purchase is not a trend: this used to stretch a flat segment across the full
+ * width with the same date at both ends, which looked like a chart and said
+ * nothing. Ratios here are layout, not money, so plain `number` arithmetic is
+ * fine; every figure the user reads is formatted from the decimal string.
  */
 export function InvestedChart({ points, label }: { points: InvestedPoint[]; label: string }) {
   const gradientId = useId();
@@ -40,16 +40,11 @@ export function InvestedChart({ points, label }: { points: InvestedPoint[]; labe
   const values = points.map((point) => Number(point.total));
   const max = niceCeiling(Math.max(...values, 0));
 
-  const x = (index: number) =>
-    PADDING.left +
-    (points.length === 1 ? PLOT.width : (index / (points.length - 1)) * PLOT.width);
+  const x = (index: number) => PADDING.left + (index / (points.length - 1)) * PLOT.width;
   const y = (value: number) => PADDING.top + PLOT.height - (value / max) * PLOT.height;
 
   const line = points.map((point, index) => `${x(index)},${y(Number(point.total))}`).join(' ');
-  const area =
-    points.length === 1
-      ? `${PADDING.left},${y(values[0] as number)} ${line} ${x(0)},${PADDING.top + PLOT.height} ${PADDING.left},${PADDING.top + PLOT.height}`
-      : `${line} ${x(points.length - 1)},${PADDING.top + PLOT.height} ${x(0)},${PADDING.top + PLOT.height}`;
+  const area = `${line} ${x(points.length - 1)},${PADDING.top + PLOT.height} ${x(0)},${PADDING.top + PLOT.height}`;
 
   const last = points[points.length - 1];
 

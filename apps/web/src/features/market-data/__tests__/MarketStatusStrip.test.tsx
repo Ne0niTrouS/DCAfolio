@@ -13,7 +13,7 @@ function price(overrides: Partial<MarketPrice> = {}): MarketPrice {
     symbol: 'PTT',
     price: '40.25',
     provider: 'yahoo',
-    capturedAt: '2026-08-27T09:00:00.000Z',
+    capturedAt: new Date().toISOString(),
     status: 'fresh',
     ...overrides,
   };
@@ -24,22 +24,43 @@ function syncButton() {
 }
 
 describe('MarketStatusStrip', () => {
-  it('names the provider so a number is never anonymous', () => {
+  it('names the source so a number is never anonymous', () => {
     render(<MarketStatusStrip prices={[price()]} />);
 
-    expect(screen.getByText(phrase('market.provider', { provider: 'yahoo' }))).toBeInTheDocument();
+    expect(
+      screen.getByText(phrase('market.source', { source: 'Yahoo Finance' })),
+    ).toBeInTheDocument();
+  });
+
+  it('says prices are current when they are', () => {
+    render(<MarketStatusStrip prices={[price()]} />);
+
+    expect(
+      screen.getByText(phrase('market.updatedAgo', { time: phrase('time.justNow') })),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(phrase('market.mayBeOutdated'))).not.toBeInTheDocument();
+    expect(screen.queryByText(phrase('market.cachedBadge'))).not.toBeInTheDocument();
+  });
+
+  it('warns and gives an exact time when prices are old', () => {
+    render(<MarketStatusStrip prices={[price({ status: 'stale' })]} />);
+
+    expect(screen.getByText(phrase('market.mayBeOutdated'))).toBeInTheDocument();
+    // The relative phrasing is not enough here: "out of date" is only
+    // actionable if the reader can see how out of date.
+    expect(screen.getByText(/\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}/)).toBeInTheDocument();
+  });
+
+  it('says plainly when there is no price data at all', () => {
+    render(<MarketStatusStrip prices={[]} />);
+
+    expect(screen.getByText(phrase('market.noPricesYet'))).toBeInTheDocument();
   });
 
   it('warns that a mock price is not a real one', () => {
     render(<MarketStatusStrip prices={[price({ provider: 'mock' })]} />);
 
     expect(screen.getByText(phrase('market.mockBadge'))).toBeInTheDocument();
-  });
-
-  it('marks a cached price rather than passing it off as current', () => {
-    render(<MarketStatusStrip prices={[price({ status: 'stale' })]} />);
-
-    expect(screen.getByText(phrase('market.cachedBadge'))).toBeInTheDocument();
   });
 
   it('offers no refresh when there is nothing to refresh', () => {
@@ -59,21 +80,66 @@ describe('MarketStatusStrip', () => {
 
   it('blocks a second press while one refresh is still running', async () => {
     const onSync = vi.fn();
-    render(<MarketStatusStrip prices={[price()]} onSync={onSync} syncing />);
+    render(<MarketStatusStrip prices={[price()]} onSync={onSync} sync={{ kind: 'loading' }} />);
 
-    const button = screen.getByRole('button', { name: phrase('common.working') });
-    expect(button).toBeDisabled();
+    expect(syncButton()).toBeDisabled();
+    expect(screen.getByText(phrase('market.syncing'))).toBeInTheDocument();
 
-    await userEvent.click(button);
+    await userEvent.click(syncButton());
     expect(onSync).not.toHaveBeenCalled();
   });
 
-  it('reports the outcome of the last refresh', () => {
+  it('reports how many prices were actually fetched', () => {
     render(
       <MarketStatusStrip
         prices={[price()]}
         onSync={() => {}}
-        syncNote={phrase('market.syncSkipped', { minutes: 12 })}
+        sync={{ kind: 'success', captured: 3, total: 3 }}
+      />,
+    );
+
+    expect(screen.getByRole('status')).toHaveTextContent(phrase('market.syncDoneTitle'));
+    expect(screen.getByRole('status')).toHaveTextContent(
+      phrase('market.syncCount', { captured: 3, total: 3 }),
+    );
+  });
+
+  it('separates a partial refresh from a complete one', () => {
+    render(
+      <MarketStatusStrip
+        prices={[price()]}
+        onSync={() => {}}
+        sync={{ kind: 'partial', captured: 2, total: 3 }}
+      />,
+    );
+
+    expect(screen.getByRole('status')).toHaveTextContent(phrase('market.syncPartialTitle'));
+    expect(screen.getByRole('status')).toHaveTextContent(
+      phrase('market.syncCount', { captured: 2, total: 3 }),
+    );
+  });
+
+  it('never shows a success after a failed request', () => {
+    render(
+      <MarketStatusStrip
+        prices={[price()]}
+        onSync={() => {}}
+        sync={{ kind: 'error', key: 'error.network' }}
+      />,
+    );
+
+    const status = screen.getByRole('status');
+    expect(status).toHaveTextContent(phrase('market.syncFailedTitle'));
+    expect(status).toHaveTextContent(phrase('error.network'));
+    expect(status).not.toHaveTextContent(phrase('market.syncDoneTitle'));
+  });
+
+  it('says how long the cooldown has left', () => {
+    render(
+      <MarketStatusStrip
+        prices={[price()]}
+        onSync={() => {}}
+        sync={{ kind: 'skipped', retryInMinutes: 12 }}
       />,
     );
 
