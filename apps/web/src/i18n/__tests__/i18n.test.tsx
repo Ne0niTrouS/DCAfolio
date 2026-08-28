@@ -33,7 +33,11 @@ describe('dictionaries', () => {
       // example, and labels built from product names rather than words.
       const SAME_IN_BOTH = [
         'common.language',
+        // Product words the owner chose to keep in English on both sides.
+        'common.dashboard',
+        'dashboard.title',
         'dashboard.dcaPerMonth',
+        'market.sync',
         'master.symbolPlaceholder',
         'master.nameThPlaceholder',
       ];

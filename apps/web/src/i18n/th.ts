@@ -9,7 +9,7 @@ import type { Dictionary } from './en';
 export const th: Dictionary = {
   // --- common ---------------------------------------------------------
   'common.appSubtitle': 'ติดตามพอร์ตหุ้นส่วนตัว',
-  'common.dashboard': 'แดชบอร์ด',
+  'common.dashboard': 'Dashboard',
   'common.history': 'ประวัติ',
   'common.export': 'ส่งออกข้อมูล',
   'common.stocks': 'ทะเบียนหุ้น',
@@ -120,7 +120,7 @@ export const th: Dictionary = {
     'การเพิ่มหุ้นต้องผ่านการตรวจสอบที่เซิร์ฟเวอร์ — เบราว์เซอร์เขียนรายชื่อนี้เองไม่ได้',
 
   // --- dashboard ------------------------------------------------------
-  'dashboard.title': 'แดชบอร์ด',
+  'dashboard.title': 'Dashboard',
   'dashboard.welcome': 'ยินดีต้อนรับกลับ นี่คือภาพรวมพอร์ตของคุณ',
   'dashboard.portfolioValue': 'มูลค่าพอร์ต',
   'dashboard.totalInvested': 'เงินลงทุนทั้งหมด',
@@ -131,11 +131,11 @@ export const th: Dictionary = {
   'dashboard.allocation': 'สัดส่วนพอร์ตการลงทุน',
   'dashboard.recentTransactions': 'รายการล่าสุด',
   'dashboard.viewAll': 'ดูทั้งหมด',
+  'dashboard.viewAllHoldings': 'ดูทั้งหมด {count} ตัว',
+  'dashboard.showFewer': 'ย่อรายการ',
   'dashboard.emptyTitle': 'ยังไม่มีการลงทุน',
   'dashboard.emptyBody': 'เมื่อมีรายการซื้อที่บันทึกไว้ ข้อมูลจะแสดงที่นี่',
   'dashboard.costVsValue': 'ต้นทุน vs มูลค่าปัจจุบัน',
-  'dashboard.totalCost': 'ต้นทุนรวม',
-  'dashboard.currentValue': 'มูลค่าปัจจุบัน',
   'dashboard.valueVsCostHint': 'คิดเป็น {percent}% ของเงินที่ลงทุนไป',
   'dashboard.notEnoughHistory': 'ยังมีข้อมูลไม่เพียงพอสำหรับแสดงแนวโน้ม',
   'dashboard.historyHint': 'จะเริ่มแสดงแนวโน้มเมื่อมีรายการซื้อมากกว่า 1 ช่วงเวลา',
@@ -165,7 +165,7 @@ export const th: Dictionary = {
   'market.noPricesYet': 'ยังไม่มีข้อมูลราคา',
   'market.pricesUnavailable': 'โหลดข้อมูลราคาไม่ได้ในตอนนี้',
   'market.source': 'แหล่งข้อมูล: {source}',
-  'market.sync': 'ซิงก์ราคา',
+  'market.sync': 'SyncData',
   'market.syncing': 'กำลังอัปเดตราคา…',
   'market.syncDoneTitle': 'อัปเดตราคาสำเร็จ',
   'market.syncPartialTitle': 'อัปเดตบางรายการสำเร็จ',

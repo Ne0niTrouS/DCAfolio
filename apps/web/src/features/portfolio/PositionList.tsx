@@ -1,5 +1,6 @@
 import type { Position } from '@dcafolio/calculation';
 import { UNAVAILABLE, formatMoney, formatPercent, formatShares } from '@dcafolio/shared';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { SignedMoney, SignedPercent } from '@/components/SignedValue';
@@ -14,7 +15,15 @@ import { donutColor } from './donut-colors';
  *
  * Every figure the ring encodes is also printed as text beside it — the chart
  * is a summary, never the only way to read the number.
+ *
+ * The list is capped so a long portfolio does not push the rest of the
+ * dashboard off the screen; "view all" reveals the remainder in place rather
+ * than sending the reader to another page for figures already loaded here.
  */
+
+/** How many holdings the list shows before "view all" is offered. */
+const VISIBLE_POSITIONS = 5;
+
 export function PositionList({
   positions,
   totalInvested,
@@ -23,12 +32,22 @@ export function PositionList({
   totalInvested: string;
 }) {
   const t = useT();
+  const [expanded, setExpanded] = useState(false);
 
   const segments = positions.map((position) => ({
     id: position.stockId,
     label: position.symbol,
     percent: position.allocationPercent ?? 0,
+    to: `/stocks/${position.symbol}`,
+    description: `${position.symbol} ${
+      position.allocationPercent === null
+        ? UNAVAILABLE
+        : formatPercent(position.allocationPercent)
+    }`,
   }));
+
+  // The ring always shows every holding; only the list below it is capped.
+  const visible = expanded ? positions : positions.slice(0, VISIBLE_POSITIONS);
 
   const largest = positions[0];
   const summary = positions
@@ -53,7 +72,7 @@ export function PositionList({
 
       <div className="min-w-0 flex-1">
         <ul className="flex flex-col gap-1">
-          {positions.map((position, index) => (
+          {visible.map((position, index) => (
             <li key={position.stockId}>
               <Link
                 to={`/stocks/${position.symbol}`}
@@ -101,6 +120,18 @@ export function PositionList({
             </li>
           ))}
         </ul>
+
+        {positions.length > VISIBLE_POSITIONS ? (
+          <button
+            type="button"
+            onClick={() => setExpanded(!expanded)}
+            className="mt-2 w-full rounded-xl border border-border-subtle px-3 py-2 text-sm font-medium text-accent-strong transition-colors hover:bg-surface-sunken"
+          >
+            {expanded
+              ? t('dashboard.showFewer')
+              : t('dashboard.viewAllHoldings', { count: positions.length })}
+          </button>
+        ) : null}
 
         <div className="mt-3 flex items-center gap-3 rounded-xl bg-accent-subtle px-3 py-3">
           <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent-light text-accent-strong">

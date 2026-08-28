@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createAuthValue, renderWithAuth } from '@/test/auth-harness';
@@ -121,14 +121,17 @@ describe('DashboardPage', () => {
     expect(screen.getAllByText('+4.00%').length).toBeGreaterThan(0);
   });
 
-  it('puts cost and current value next to each other', async () => {
+  it('puts cost and current value in one card, each stated once', async () => {
     state.transactions = [TRANSACTION_ROW];
     state.prices = [priceRow()];
     render();
 
-    expect(await screen.findByText(phrase('dashboard.costVsValue'))).toBeInTheDocument();
-    expect(screen.getByText(phrase('dashboard.totalCost'))).toBeInTheDocument();
-    expect(screen.getByText(phrase('dashboard.currentValue'))).toBeInTheDocument();
+    const card = await screen.findByRole('region', { name: phrase('dashboard.costVsValue') });
+
+    expect(within(card).getByText(phrase('dashboard.portfolioValue'))).toBeInTheDocument();
+    expect(within(card).getByText(phrase('dashboard.totalInvested'))).toBeInTheDocument();
+    expect(within(card).getAllByText('฿13,000.00')).toHaveLength(1);
+    expect(within(card).getAllByText('฿12,500.00')).toHaveLength(1);
   });
 
   it('no longer reports a monthly DCA average beside current-state figures', async () => {
@@ -206,10 +209,10 @@ describe('DashboardPage', () => {
     state.prices = [priceRow()];
     render();
 
-    expect(await screen.findByRole('link', { name: /CPALL/ })).toHaveAttribute(
-      'href',
-      '/stocks/CPALL',
-    );
+    // Two routes to the same holding now: the ring slice and the list row.
+    const links = await screen.findAllByRole('link', { name: /CPALL/ });
+    expect(links.length).toBeGreaterThanOrEqual(2);
+    for (const link of links) expect(link).toHaveAttribute('href', '/stocks/CPALL');
     expect(screen.getByText(phrase('dashboard.recentTransactions'))).toBeInTheDocument();
     expect(screen.getAllByText('09/08/2026').length).toBeGreaterThan(0);
   });

@@ -11,7 +11,8 @@ import { Panel } from '@/components/Panel';
 import { CalendarIcon } from '@/components/icons';
 import { useT } from '@/i18n/use-language';
 
-const RECENT_LIMIT = 5;
+/** Ten rows: enough to cover a month of weekly buying without leaving the page. */
+const RECENT_LIMIT = 10;
 
 /** The symbol as a badge — it is an identifier, not prose. */
 function Ticker({ symbol }: { symbol: string }) {

@@ -8,9 +8,8 @@ import { syncStateFrom } from '@/features/market-data/market-status';
 import { useLatestPrices } from '@/features/market-data/use-latest-prices';
 import { useMarketStatus } from '@/features/market-data/use-market-status';
 import { syncErrorKey, useSyncPrices } from '@/features/market-data/use-sync-prices';
-import { CostVsValueCard } from '@/features/portfolio/CostVsValueCard';
 import { InvestedPanel } from '@/features/portfolio/InvestedPanel';
-import { KpiCards } from '@/features/portfolio/KpiCards';
+import { PortfolioSummaryCard } from '@/features/portfolio/PortfolioSummaryCard';
 import { PositionList } from '@/features/portfolio/PositionList';
 import { RecentTransactions } from '@/features/portfolio/RecentTransactions';
 import { SummaryCard } from '@/features/portfolio/SummaryCard';
@@ -59,9 +58,7 @@ export function DashboardPage() {
 
       {!isLoading && !error && !isEmpty ? (
         <>
-          <KpiCards portfolio={portfolio} />
-
-          <CostVsValueCard portfolio={portfolio} />
+          <PortfolioSummaryCard portfolio={portfolio} />
 
           <MarketStatusStrip
             prices={pricesQuery.data ?? []}
