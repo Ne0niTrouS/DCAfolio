@@ -32,6 +32,8 @@ export const th: Dictionary = {
   'common.sharesUnit': 'หุ้น',
   'common.toggleNavigation': 'สลับเมนูนำทาง',
   'common.noMatches': 'ไม่พบรายการที่ตรงกัน',
+  'common.previous': 'ก่อนหน้า',
+  'common.next': 'ถัดไป',
   'common.footerTagline': 'ลงทุนสม่ำเสมอ เพื่ออนาคตที่เติบโต',
 
   // --- accessible labels for signed figures ---------------------------
@@ -104,20 +106,14 @@ export const th: Dictionary = {
   // --- stock master ---------------------------------------------------
   'master.title': 'ทะเบียนหุ้น',
   'master.description': 'รายชื่อหุ้นไทยที่ใช้บันทึกรายการซื้อได้',
-  'master.addTitle': 'เพิ่มหุ้น',
-  'master.symbol': 'ชื่อย่อหุ้น',
-  'master.symbolPlaceholder': 'CPALL',
-  'master.nameTh': 'ชื่อบริษัท (ภาษาไทย)',
-  'master.nameThPlaceholder': 'บริษัท ซีพี ออลล์ จำกัด (มหาชน)',
-  'master.submit': 'เพิ่มหุ้น',
-  'master.added': 'เพิ่ม {symbol} แล้ว',
   'master.search': 'ค้นหา',
   'master.searchPlaceholder': 'ชื่อย่อหรือชื่อบริษัท',
   'master.count': 'ทั้งหมด {count} ตัว',
   'master.empty': 'ไม่พบหุ้นที่ตรงกับคำค้นหา',
+  'master.pagination': 'หน้าของรายชื่อหุ้น',
+  'master.showing': 'แสดง {from}–{to} จาก {total}',
+  'master.pageOf': 'หน้า {page} จาก {pageCount}',
   'master.loadError': 'โหลดรายชื่อหุ้นไม่สำเร็จ',
-  'master.serverNote':
-    'การเพิ่มหุ้นต้องผ่านการตรวจสอบที่เซิร์ฟเวอร์ — เบราว์เซอร์เขียนรายชื่อนี้เองไม่ได้',
 
   // --- dashboard ------------------------------------------------------
   'dashboard.title': 'Dashboard',

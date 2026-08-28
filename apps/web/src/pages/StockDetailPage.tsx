@@ -3,7 +3,8 @@ import { UNAVAILABLE, formatDate, formatMoney, formatShares } from '@dcafolio/sh
 import { Link, useParams } from 'react-router-dom';
 
 import { SignedMoney, SignedPercent } from '@/components/SignedValue';
-import { EmptyState, ErrorState, LoadingState } from '@/components/states';
+import { EmptyState, ErrorState } from '@/components/states';
+import { StockDetailSkeleton } from '@/features/portfolio/StockDetailSkeleton';
 import { usePortfolio } from '@/features/portfolio/use-portfolio';
 import { useT } from '@/i18n/use-language';
 import { useRelativeTime } from '@/i18n/use-relative-time';
@@ -24,7 +25,7 @@ export function StockDetailPage() {
   const relative = useRelativeTime();
   const { portfolio, transactions, isLoading, error, refetch } = usePortfolio();
 
-  if (isLoading) return <LoadingState label={t('stock.loading', { symbol })} />;
+  if (isLoading) return <StockDetailSkeleton symbol={symbol} />;
 
   if (error) {
     return (

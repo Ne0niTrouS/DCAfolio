@@ -33,6 +33,8 @@ export const en = {
   'common.sharesUnit': 'shares',
   'common.toggleNavigation': 'Toggle navigation',
   'common.noMatches': 'No matches',
+  'common.previous': 'Previous',
+  'common.next': 'Next',
   'common.footerTagline': 'Invest consistently, grow your future.',
 
   // --- accessible labels for signed figures ---------------------------
@@ -107,20 +109,14 @@ export const en = {
   // --- stock master ---------------------------------------------------
   'master.title': 'Stocks',
   'master.description': 'The shared list of Thai SET stocks you can record a purchase against.',
-  'master.addTitle': 'Add a stock',
-  'master.symbol': 'Symbol',
-  'master.symbolPlaceholder': 'CPALL',
-  'master.nameTh': 'Company name (Thai)',
-  'master.nameThPlaceholder': 'บริษัท ซีพี ออลล์ จำกัด (มหาชน)',
-  'master.submit': 'Add stock',
-  'master.added': '{symbol} was added.',
   'master.search': 'Search',
   'master.searchPlaceholder': 'Symbol or Thai name',
   'master.count': '{count} stocks',
   'master.empty': 'No stock matches that search.',
+  'master.pagination': 'Stock list pages',
+  'master.showing': 'Showing {from}–{to} of {total}',
+  'master.pageOf': 'Page {page} of {pageCount}',
   'master.loadError': 'Could not load the stock list.',
-  'master.serverNote':
-    'Adding a stock goes through a server check — the browser cannot write this list directly.',
 
   // --- dashboard ------------------------------------------------------
   'dashboard.title': 'Dashboard',

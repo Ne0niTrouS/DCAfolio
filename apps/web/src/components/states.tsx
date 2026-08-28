@@ -4,20 +4,13 @@ import { useT } from '@/i18n/use-language';
 
 import { Button } from './Button';
 
-/** Every major page handles loading, empty and error explicitly. */
-
-export function LoadingState({ label }: { label?: string }) {
-  const t = useT();
-
-  return (
-    <div role="status" aria-live="polite" className="flex flex-col gap-3">
-      <span className="sr-only">{label ?? t('common.loading')}</span>
-      {[0, 1, 2].map((row) => (
-        <div key={row} className="h-16 animate-pulse rounded-xl bg-surface-sunken" />
-      ))}
-    </div>
-  );
-}
+/**
+ * Every major page handles loading, empty and error explicitly.
+ *
+ * Loading is not here: each page has its own skeleton shaped like the content
+ * it is waiting for, because a generic set of grey bars reserves none of the
+ * space the real thing needs and the layout jumps when it arrives.
+ */
 
 export function EmptyState({
   title,

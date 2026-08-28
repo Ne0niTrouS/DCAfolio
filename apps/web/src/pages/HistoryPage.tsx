@@ -2,8 +2,9 @@ import { todayIsoDate, type TransactionWithStock } from '@dcafolio/shared';
 import { useMemo, useState } from 'react';
 
 import { Button } from '@/components/Button';
-import { EmptyState, ErrorState, LoadingState } from '@/components/states';
+import { EmptyState, ErrorState } from '@/components/states';
 import { DeleteTransactionDialog } from '@/features/transactions/DeleteTransactionDialog';
+import { HistorySkeleton } from '@/features/transactions/HistorySkeleton';
 import { HistoryFilters } from '@/features/transactions/HistoryFilters';
 import { TransactionCard } from '@/features/transactions/TransactionCard';
 import { TransactionDialog } from '@/features/transactions/TransactionDialog';
@@ -48,7 +49,7 @@ export function HistoryPage() {
         />
       </div>
 
-      {history.isLoading ? <LoadingState label={t('history.loadingTransactions')} /> : null}
+      {history.isLoading ? <HistorySkeleton /> : null}
 
       {!history.isLoading && history.error ? (
         <ErrorState
