@@ -74,10 +74,14 @@ export function DonutChart({
               fill="none"
               stroke={donutColor(index)}
               strokeWidth={DONUT_STROKE}
+              // Normalises the arc so every slice draws on over the same time,
+              // rather than the biggest taking longest.
+              pathLength={1}
               // Dimming the others is a second cue for the same fact the centre
               // states in words; it is never the only one.
               opacity={selectedId === null || selected ? 1 : 0.45}
-              className="transition-opacity"
+              className="draw-arc transition-opacity"
+              style={{ animationDelay: `${index * 90}ms` }}
             />
           );
 

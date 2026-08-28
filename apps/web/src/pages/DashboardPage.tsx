@@ -1,13 +1,14 @@
-import { useMemo } from 'react';
+import { useMemo, type CSSProperties } from 'react';
 
 import { Panel } from '@/components/Panel';
 import { PieIcon } from '@/components/icons';
-import { EmptyState, ErrorState, LoadingState } from '@/components/states';
+import { EmptyState, ErrorState } from '@/components/states';
 import { MarketStatusStrip } from '@/features/market-data/MarketStatusStrip';
 import { syncStateFrom } from '@/features/market-data/market-status';
 import { useLatestPrices } from '@/features/market-data/use-latest-prices';
 import { useMarketStatus } from '@/features/market-data/use-market-status';
 import { syncErrorKey, useSyncPrices } from '@/features/market-data/use-sync-prices';
+import { DashboardSkeleton } from '@/features/portfolio/DashboardSkeleton';
 import { InvestedPanel } from '@/features/portfolio/InvestedPanel';
 import { PortfolioSummaryCard } from '@/features/portfolio/PortfolioSummaryCard';
 import { PositionList } from '@/features/portfolio/PositionList';
@@ -40,7 +41,7 @@ export function DashboardPage() {
         <p className="mt-1 text-sm text-ink-muted">{t('dashboard.welcome')}</p>
       </header>
 
-      {isLoading ? <LoadingState label={t('dashboard.loadingPortfolio')} /> : null}
+      {isLoading ? <DashboardSkeleton /> : null}
 
       {!isLoading && error ? (
         <ErrorState
@@ -56,19 +57,29 @@ export function DashboardPage() {
         <EmptyState title={t('dashboard.emptyTitle')} description={t('dashboard.emptyBody')} />
       ) : null}
 
+      {/* The stagger runs top to bottom so the eye lands on the headline
+          figures first. It reveals content that is already rendered — nothing
+          here waits on an animation, and reduced-motion skips all of it. */}
       {!isLoading && !error && !isEmpty ? (
         <>
-          <PortfolioSummaryCard portfolio={portfolio} />
+          <div className="enter">
+            <PortfolioSummaryCard portfolio={portfolio} />
+          </div>
 
-          <MarketStatusStrip
-            prices={pricesQuery.data ?? []}
-            marketState={marketStatus.data?.state ?? 'unknown'}
-            failed={pricesQuery.isError}
-            onSync={() => sync.mutate()}
-            sync={syncState}
-          />
+          <div className="enter" style={{ '--enter-delay': '60ms' } as CSSProperties}>
+            <MarketStatusStrip
+              prices={pricesQuery.data ?? []}
+              marketState={marketStatus.data?.state ?? 'unknown'}
+              failed={pricesQuery.isError}
+              onSync={() => sync.mutate()}
+              sync={syncState}
+            />
+          </div>
 
-          <div className="grid gap-4 xl:grid-cols-2">
+          <div
+            className="enter grid gap-4 xl:grid-cols-2"
+            style={{ '--enter-delay': '120ms' } as CSSProperties}
+          >
             <Panel title={t('dashboard.allocation')} icon={<PieIcon />}>
               <PositionList
                 positions={portfolio.positions}
@@ -79,7 +90,10 @@ export function DashboardPage() {
             <InvestedPanel points={series} />
           </div>
 
-          <div className="grid gap-4 xl:grid-cols-[2fr_1fr]">
+          <div
+            className="enter grid gap-4 xl:grid-cols-[2fr_1fr]"
+            style={{ '--enter-delay': '180ms' } as CSSProperties}
+          >
             <RecentTransactions transactions={transactions} />
             <SummaryCard portfolio={portfolio} />
           </div>

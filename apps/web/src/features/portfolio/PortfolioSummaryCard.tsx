@@ -79,8 +79,11 @@ export function PortfolioSummaryCard({ portfolio }: { portfolio: Portfolio }) {
         <div className="mt-5 border-t border-border-subtle pt-4">
           {/* Decorative: the same comparison is printed in full above. */}
           <div aria-hidden="true" className="h-2 overflow-hidden rounded-full bg-surface-sunken">
+            {/* Filled from the left rather than appearing at full length, so the
+                proportion is read as a proportion. Purely decorative: the two
+                amounts it compares are printed above. */}
             <div
-              className={`h-full rounded-full ${gained ? 'bg-accent' : 'bg-loss'}`}
+              className={`grow-bar h-full origin-left rounded-full ${gained ? 'bg-accent' : 'bg-loss'}`}
               style={{ width: `${width}%` }}
             />
           </div>
