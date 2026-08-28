@@ -69,7 +69,7 @@ npx supabase link --project-ref <your-project-ref>
 npx supabase db push
 ```
 
-That applies all four migrations, including the stock master. The Supabase CLI has no command
+That applies every migration, including the stock master. The Supabase CLI has no command
 that runs an arbitrary SQL file against a remote project, which is exactly why the stock master
 is migration `0004_seed_stocks.sql` rather than a separate seed file.
 
@@ -80,7 +80,7 @@ select tablename, rowsecurity from pg_tables
  where schemaname = 'public' order by tablename;
 -- expect: market_prices, profiles, stocks, transactions — all rowsecurity = true
 
-select count(*) from public.stocks;          -- expect 21
+select count(*) from public.stocks;          -- expect 33
 select count(*) from pg_policies where schemaname = 'public';  -- expect 10
 ```
 
@@ -113,7 +113,6 @@ Without that redirect URL the password-reset link will not return to the app.
 
 ```bash
 npx supabase functions deploy market-data --use-api
-npx supabase functions deploy stock-admin --use-api
 npx supabase secrets set MARKET_DATA_PROVIDER=yahoo
 ```
 
@@ -143,17 +142,10 @@ curl -X POST "https://<project-ref>.supabase.co/functions/v1/market-data" \
 > the UI. Portfolio value and profit/loss are then **not real**. Total invested, share counts and
 > average cost are always real whichever provider is set: they come from your own transactions.
 
-`stock-admin` needs no secrets of its own — `SUPABASE_URL`, `SUPABASE_ANON_KEY` and
-`SUPABASE_SERVICE_ROLE_KEY` are all injected. It is what the Stocks page calls to add an entry to
-the shared master, because RLS gives the browser no write access to `stocks`. Verify it refuses
-an anonymous caller:
+`market-data` is the only Edge Function. A `stock-admin` function once let the Stocks page add a
+symbol; it was removed along with the form, and migration `0007` withdrew the INSERT privilege it
+needed. A symbol now arrives by migration — see `supabase/migrations/0005_more_stocks.sql`.
 
-```bash
-curl -X POST "https://<project-ref>.supabase.co/functions/v1/stock-admin" \
-  -H "Content-Type: application/json" \
-  -d '{"symbol":"TEST","nameTh":"ทดสอบ"}'
-# expect: 401 {"error":"error.sessionExpired"} — no user token, no write
-```
 
 Optional, once you have transactions: schedule a refresh with `pg_cron` in the dashboard, or
 invoke the function manually. There is deliberately no scheduler in V1.

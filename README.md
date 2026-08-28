@@ -18,8 +18,8 @@ BUY STOCK → RECORD PURCHASE → CALCULATE COST → GET MARKET PRICE
 
 ## Features
 
-**Dashboard** — portfolio value, total invested, profit/loss, return %, DCA per month; an
-allocation ring with a row per holding; a chart of what you have invested over time; recent
+**Dashboard** — portfolio value, total invested, profit/loss and return % in one card; an
+allocation ring whose slices report their share when pressed, with a row per holding; a chart of what you have invested over time; recent
 purchases; and a market-data strip that always names the provider and how old the price is.
 
 Both charts are hand-drawn SVG — no charting library, nothing fetched at runtime. The area chart
@@ -35,8 +35,8 @@ range. A table on desktop, purpose-built cards on mobile.
 **Stock detail** — shares, total invested, average cost, current price, current value,
 profit/loss, return %, and the purchase history for one stock.
 
-**Stocks** — the shared list of Thai SET symbols, searchable, with a form to add one. Adding
-goes through a server check: the browser has no write access to that list.
+**Stocks** — the shared list of Thai SET symbols, searchable and paged. Read-only: a symbol
+arrives by migration, so the repository stays the definition of what production holds.
 
 **Export** — CSV and XLSX, for one stock or all, by month, by year, or all time. XLSX carries a
 Transactions sheet and a Summary sheet.
@@ -58,7 +58,7 @@ colour alone.
 Browser — React + TypeScript + Vite + Tailwind
    │  @supabase/supabase-js (anon key, user JWT)
    ▼
-Supabase — Auth · PostgreSQL + Row Level Security · Edge Functions (market-data, stock-admin)
+Supabase — Auth · PostgreSQL + Row Level Security · Edge Function (market-data)
    │
    ▼
 Market-data provider — Yahoo Finance (`yahoo`) or synthetic (`mock`), server-side only
@@ -66,9 +66,8 @@ Market-data provider — Yahoo Finance (`yahoo`) or synthetic (`mock`), server-s
 
 **Supabase-first.** There is no always-running Node/Express backend. The React app talks to
 PostgreSQL directly and **Row Level Security is the authorization boundary**. Only work that
-genuinely needs a server lives in an Edge Function: calling an external market API with a secret
-and writing the price cache, and adding to the shared stock master, which the browser is not
-allowed to write.
+genuinely needs a server lives in an Edge Function: calling an external market API and writing the
+price cache, which no client may write.
 
 ```
 apps/web/              React application

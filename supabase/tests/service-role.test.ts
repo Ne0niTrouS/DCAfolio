@@ -76,13 +76,16 @@ describe('service_role privileges', () => {
     });
   });
 
-  it('adds to the stock master, which is what stock-admin does', async () => {
+  it('cannot add to the stock master', async () => {
+    // It could, for the `stock-admin` function, which let the browser add a
+    // symbol. That function is gone and the register is read-only again: a
+    // symbol arrives by migration, and migrations run as `postgres`.
     await asService(async () => {
-      await db.query(
-        "insert into public.stocks (symbol, name_th, market) values ('TEST', 'ทดสอบ', 'SET')",
-      );
-      const result = await db.query("select symbol from public.stocks where symbol = 'TEST'");
-      expect(result.rows).toHaveLength(1);
+      await expect(
+        db.query(
+          "insert into public.stocks (symbol, name_th, market) values ('TEST', 'ทดสอบ', 'SET')",
+        ),
+      ).rejects.toThrow(/permission denied/);
     });
   });
 
@@ -91,14 +94,18 @@ describe('service_role privileges', () => {
     // service-role delete would bypass every policy protecting it.
     await asServiceRole(db, async () => {
       await db.exec('set role service_role');
-      await expect(db.query('delete from public.transactions')).rejects.toThrow(/permission denied/);
+      await expect(db.query('delete from public.transactions')).rejects.toThrow(
+        /permission denied/,
+      );
       await db.exec('reset role');
     });
   });
 
   it('is not given access to profiles', async () => {
     await asService(async () => {
-      await expect(db.query('select * from public.profiles')).rejects.toThrow(/permission denied/);
+      await expect(db.query('select * from public.profiles')).rejects.toThrow(
+        /permission denied/,
+      );
     });
   });
 });

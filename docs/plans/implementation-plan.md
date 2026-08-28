@@ -35,8 +35,9 @@ npm run build     # when the phase touched apps/web
 | 12 | Deployment | 🟡 Documented, not executed (needs owner credentials) |
 | 13 | UI Redesign & Localization | ✅ Complete (browser-verified signed out; signed-in screens covered by tests only) |
 | 14 | Mockup Alignment | ✅ Complete (same verification limits as Phase 13) |
-| 15 | Searchable Pickers & Stock Master | ✅ Complete (Edge Function not yet deployed) |
-| 16 | Real Prices & Sync | ✅ Complete (deployed state unverified — see the phase entry) |
+| 15 | Searchable Pickers & Stock Master | ⚠️ Superseded by Phase 17 — the add-stock half was removed |
+| 16 | Real Prices & Sync | ✅ Complete (verified against the live project) |
+| 17 | Dashboard Clarity, Skeletons & Read-Only Register | ✅ Complete |
 
 ---
 
@@ -853,3 +854,91 @@ button that fetches them on demand.
 stocks actually held, and profit/loss stops being synthetic — with the provider named, the age
 shown, cached prices labelled, and a cooldown between the button and a third party who never
 agreed to serve it.
+
+---
+
+## PHASE 17 — Dashboard Clarity, Skeletons and a Read-Only Register
+
+**Objective**: make the dashboard say what it means without a second look, and settle what the
+stock register is for.
+
+### Task 17.1 — One card instead of two, and honest chart states
+
+- **Files**: `features/portfolio/PortfolioSummaryCard.tsx` (replaces `KpiCards.tsx` and
+  `CostVsValueCard.tsx`), `InvestedPanel.tsx`, `InvestedChart.tsx`, `cost-vs-value.ts`,
+  `components/SignedValue.tsx`, `DashboardPage.tsx`.
+- **Details**: the KPI row and the cost-versus-value panel printed the same four numbers twice
+  under two sets of names, so the screen looked like it held eight facts. Merged. The DCA-per-month
+  card went with it: it described the habit, next to four figures that are all current state.
+  `computePortfolio` still returns `dcaPerMonth` for a dedicated DCA view.
+- **The chart no longer invents a trend.** One purchase date used to be drawn as a flat line
+  stretched across the panel between two copies of the same date. There is no historical price
+  data to draw from and none is fabricated: one point states the figure and says a trend needs
+  more than one date; zero points say so plainly.
+- **Signed values gain an arrow**, a third cue after the sign and the spoken label. Zero gets no
+  arrow rather than an em dash, because `—` already means "no value at all" here.
+- **Tests**: `PortfolioSummaryCard.test.tsx` (each figure appears exactly once),
+  `InvestedPanel.test.tsx` (0 / 1 / 2+ points).
+
+### Task 17.2 — Market data and sync states
+
+- **Files**: `features/market-data/market-status.ts` (new), `MarketStatusStrip.tsx`,
+  `use-sync-prices.ts`, `use-auto-sync.ts` (new), `packages/shared/src/format.ts`
+  (`formatDateTime`).
+- **Details**: the panel now carries two facts that are deliberately not merged — how current the
+  stored prices are, and what the last refresh did. A refresh that fetched nothing leaves the
+  prices exactly as stale as they were. Stale prices carry an absolute timestamp, because "out of
+  date" is only actionable if the reader can see how out of date. `syncStateFrom` counts live
+  prices separately from re-published cache entries: "5/5 updated" for three live and two cached
+  is the specific claim it exists to prevent.
+- **Auto-sync** runs once after signing in, not on every visit. The marker in `localStorage`
+  records the *attempt*, so a provider outage plus a reload loop cannot hammer the provider
+  unattended.
+- **Tests**: `market-status.test.ts` (11 cases), `use-auto-sync.test.ts` (6),
+  `MarketStatusStrip.test.tsx` (12).
+
+### Task 17.3 — A navigable allocation ring
+
+- **Files**: `DonutChart.tsx`, `donut-geometry.ts` (new), `PositionList.tsx`.
+- **Details**: slices were full circles with a dash pattern sized to each share. That draws
+  correctly and **hit-tests as the whole path**, so a click anywhere landed on whichever drew
+  last — clicking the biggest holding opened the smallest. Each slice is now a real arc.
+- Pressing a slice reports that holding's exact share in the centre rather than navigating away;
+  the centre then carries the link. Navigating on the first press meant the one thing a reader
+  presses a chart to find out was the one thing the press did not tell them.
+- **Tests**: `donut-geometry.test.ts` (7), `PositionList.test.tsx` (11).
+
+### Task 17.4 — Skeletons and motion
+
+- **Files**: `components/Skeleton.tsx` (new), `DashboardSkeleton.tsx`, `HistorySkeleton.tsx`,
+  `StockDetailSkeleton.tsx`, `StockMasterSkeleton.tsx`, `index.css`. `LoadingState` deleted.
+- **Details**: each skeleton is laid out like the page it stands in for, so nothing jumps when the
+  data lands. None shows a figure, not even a zero — a placeholder shaped like a number reads as
+  data that has arrived. Content then settles with a short staggered rise; the comparison bar
+  fills from the left; the ring draws its slices on. Every animation only reveals content that is
+  already rendered, so `prefers-reduced-motion` turns all of them off and gives the finished state
+  immediately.
+- **Tests**: `skeletons.test.tsx` runs the same three rules over all three page skeletons.
+
+### Task 17.5 — The register is read-only, and paged
+
+- **Files**: `StockMasterPage.tsx`, `features/stocks/paging.ts` (new); deleted
+  `AddStockForm.tsx`, `create-stock.ts`, `supabase/functions/stock-admin/`,
+  `packages/shared/src/stock-validation.ts`; added `0007_drop_stock_admin_grants.sql`.
+- **Details**: adding a symbol from the browser was built in Phase 15 as an alternative to writing
+  a migration. The owner decided against keeping it, so the form, the Edge Function, the shared
+  validation that mirrored it and the phrases only it used are all gone, and the INSERT privilege
+  it needed is revoked — a standing write path that nothing uses is a write path nobody is
+  watching. A symbol arrives by migration.
+- The list pages twenty at a time. `paginate` clamps the requested page rather than trusting it: a
+  search that shortens the list while the reader is on page two would otherwise show an empty page
+  with no way back, which reads as "no results" for a search that has plenty.
+- **Tests**: `paging.test.ts` (7), `StockMasterPage.test.tsx` (9), and `service-role.test.ts` now
+  asserts the register cannot be written by `service_role`.
+
+- **Verification**: typecheck ✅ · lint ✅ · full suite ✅ · build ✅. Applied to the live project:
+  `db push` of `0007`, `functions delete stock-admin`.
+
+**Expected result**: a dashboard that answers what was invested, what it is worth and whether that
+is up or down without repeating itself, states plainly how old its prices are, and never draws a
+line it cannot support with data.

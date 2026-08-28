@@ -8,5 +8,5 @@
     "allowImportingTsExtensions": true
   },
   "include": ["tests", "functions/_shared"],
-  "exclude": ["functions/market-data", "functions/stock-admin"]
+  "exclude": ["functions/market-data"]
 }

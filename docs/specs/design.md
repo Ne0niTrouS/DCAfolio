@@ -644,42 +644,25 @@ figures render as `—` with a short explanation, and invested/shares/average co
 Every place a market price is shown must be able to show: the price, the provider, the
 last-updated time, and a stale/cached badge when applicable.
 
-### 9.6 The `stock-admin` Edge Function
+### 9.6 The stock register is read-only
 
-Adding to the stock master from the app, without giving the browser write access to shared
-reference data.
+`stocks` is readable by every signed-in user and writable by none. A client that could write it
+could rename or deactivate a symbol under every other reader, and the rows are referenced by
+`transactions.stock_id`.
 
-`stocks` is readable by every signed-in user and writable by none: a client that could write it
-could also rename or deactivate a symbol under every other reader, and the rows are referenced by
-`transactions.stock_id`. The rule in §12 therefore stands unchanged — the app asks a function
-instead of writing the table.
+A `stock-admin` Edge Function briefly bridged that: the Stocks page asked it to add a symbol, it
+verified the caller with the anon key and their own token, validated the payload, and inserted
+with the service-role key. It worked, and the owner decided against keeping it. **A symbol now
+arrives only by migration**, which keeps this repository the definition of what production holds
+and puts each new row through review rather than through a form.
 
-```
-Stocks page → supabase.functions.invoke('stock-admin')
-                  │  caller's JWT
-                  ▼
-            stock-admin (Deno)
-              1. verify the caller with the ANON key + their token
-                 — never with the service-role client, which would
-                   report a valid user for any input
-              2. validate symbol and Thai name
-              3. insert with the service-role key
-                  │
-                  ▼
-            public.stocks   (CHECK constraints, unique(symbol))
-```
+The function is deleted from the project, its source is gone, and migration
+`0007_drop_stock_admin_grants.sql` withdraws the INSERT on `stocks` it needed — a standing write
+path that nothing uses is a write path nobody is watching.
 
-The same rules run three times: in the browser so the user gets a sentence instead of a
-rejection, in the function because a browser check protects nobody, and as CHECK constraints in
-the schema, which is the last word. `packages/shared/src/stock-validation.ts` holds the browser
-copy; the function repeats it, because Deno cannot import from the npm workspace.
-
-Responses carry translation keys, not sentences: `error.symbolTaken` on a unique violation
-(409), `error.sessionExpired` when the caller is not signed in (401), a `validation.*` code on a
-bad payload (400). The raw Postgres error is logged server-side and never returned.
-
-**Deleting or renaming is deliberately not offered.** Both would rewrite history for any
-transaction pointing at the row. Correct a mistake with a new migration.
+**Deleting or renaming a symbol is deliberately not offered either.** Both would rewrite history
+for any transaction pointing at the row. Retire one by setting `is_active = false`; correct a
+mistake with a new migration.
 
 ---
 
@@ -838,7 +821,7 @@ on `Escape`.
 | RLS | Enabled on `profiles`, `stocks`, `transactions`, `market_prices`. |
 | `profiles` | SELECT/INSERT/UPDATE/DELETE restricted to `user_id = auth.uid()`. |
 | `transactions` | SELECT/UPDATE/DELETE `USING (user_id = auth.uid())`; INSERT `WITH CHECK (user_id = auth.uid())`. |
-| `stocks` | SELECT for role `authenticated`. No client write policy — writes go through the `stock-admin` Edge Function (§9.6). |
+| `stocks` | SELECT for role `authenticated`. No client write policy and no write path at all — a symbol arrives by migration (§9.6). |
 | `market_prices` | SELECT for role `authenticated`. Writes only via the Edge Function's service role. |
 | Identity | Always `auth.uid()`. A client-supplied `user_id` is never trusted. |
 | Secrets | Service-role key, provider API keys and tokens live only in Edge Function secrets. Never in `VITE_*`, never in the bundle, never in git. |
@@ -934,7 +917,7 @@ default privileges a project happens to carry:
 | Table | `service_role` may |
 | --- | --- |
 | `transactions` | SELECT — which symbols are held |
-| `stocks` | SELECT, INSERT — the embed in that query, and `stock-admin` |
+| `stocks` | SELECT — the embed in that query. INSERT was withdrawn with `stock-admin` (migration 0007). |
 | `market_prices` | SELECT, INSERT — read the newest capture, append new ones |
 | `latest_market_prices` | SELECT |
 | `profiles` | nothing |

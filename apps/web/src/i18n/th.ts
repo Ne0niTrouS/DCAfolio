@@ -81,7 +81,6 @@ export const th: Dictionary = {
   'error.stockUnavailable': 'หุ้นตัวนี้ไม่พร้อมใช้งานแล้ว กรุณาเลือกตัวอื่น',
   'error.forbidden': 'คุณไม่มีสิทธิ์เข้าถึงข้อมูลนี้',
   'error.sessionExpired': 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบอีกครั้ง',
-  'error.symbolTaken': 'มีหุ้นชื่อย่อนี้อยู่แล้ว',
   'error.functionMissing': 'ฟีเจอร์นี้ยังไม่ได้ติดตั้งบนเซิร์ฟเวอร์',
   'error.serverConfig': 'เซิร์ฟเวอร์ตั้งค่าไม่ครบ',
   'error.databaseUnavailable': 'อ่านข้อมูลไม่ได้ในตอนนี้ กรุณาลองใหม่อีกครั้ง',
@@ -97,11 +96,6 @@ export const th: Dictionary = {
   'validation.sharesRequired': 'กรุณากรอกจำนวนหุ้นที่ได้รับ',
   'validation.sharesPositive': 'จำนวนหุ้นต้องมากกว่า 0',
   'validation.shareDecimals': 'ใช้ทศนิยมได้ไม่เกิน 4 ตำแหน่ง',
-  'validation.symbolRequired': 'กรุณากรอกชื่อย่อหุ้น',
-  'validation.symbolFormat': 'ใช้ตัวอักษรและตัวเลขเท่านั้น เช่น CPALL',
-  'validation.symbolTooLong': 'ชื่อย่อยาวเกินไป',
-  'validation.nameThRequired': 'กรุณากรอกชื่อบริษัทภาษาไทย',
-  'validation.nameThTooLong': 'ชื่อบริษัทยาวเกินไป',
 
   // --- stock master ---------------------------------------------------
   'master.title': 'ทะเบียนหุ้น',

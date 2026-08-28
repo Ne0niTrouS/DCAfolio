@@ -82,7 +82,6 @@ export const en = {
   'error.stockUnavailable': 'That stock is no longer available. Pick another one.',
   'error.forbidden': 'You do not have access to that record.',
   'error.sessionExpired': 'Your session has expired. Sign in again.',
-  'error.symbolTaken': 'That symbol is already in the list.',
   'error.functionMissing': 'This feature is not deployed on the server yet.',
   'error.serverConfig': 'The server is missing part of its configuration.',
   'error.databaseUnavailable': 'Could not read your data just now. Please try again.',
@@ -100,11 +99,6 @@ export const en = {
   'validation.sharesPositive': 'Shares must be greater than 0.',
   /** Mirrors SHARE_DECIMALS in @dcafolio/shared. */
   'validation.shareDecimals': 'Use at most 4 decimal places.',
-  'validation.symbolRequired': 'Enter the stock symbol.',
-  'validation.symbolFormat': 'Use letters and digits only, for example CPALL.',
-  'validation.symbolTooLong': 'That symbol is too long.',
-  'validation.nameThRequired': 'Enter the Thai company name.',
-  'validation.nameThTooLong': 'That company name is too long.',
 
   // --- stock master ---------------------------------------------------
   'master.title': 'Stocks',

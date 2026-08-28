@@ -48,16 +48,16 @@ describe('invokeEdgeFunction', () => {
   it('passes the body through', async () => {
     mocks.invoke.mockResolvedValue({ data: {}, error: null });
 
-    await invokeEdgeFunction('stock-admin', { symbol: 'PTT' });
+    await invokeEdgeFunction('market-data', { force: true });
 
-    expect(mocks.invoke).toHaveBeenCalledWith('stock-admin', { body: { symbol: 'PTT' } });
+    expect(mocks.invoke).toHaveBeenCalledWith('market-data', { body: { force: true } });
   });
 
   it('reads the phrase key the function replied with', async () => {
-    mocks.invoke.mockResolvedValue(httpError(409, { error: 'error.symbolTaken' }));
+    mocks.invoke.mockResolvedValue(httpError(500, { error: 'error.databaseUnavailable' }));
 
-    await expect(invokeEdgeFunction('stock-admin')).rejects.toThrow(
-      expect.objectContaining({ key: 'error.symbolTaken' }),
+    await expect(invokeEdgeFunction('market-data')).rejects.toThrow(
+      expect.objectContaining({ key: 'error.databaseUnavailable' }),
     );
   });
 
