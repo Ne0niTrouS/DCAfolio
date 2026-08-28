@@ -81,6 +81,8 @@ export const th: Dictionary = {
   'error.sessionExpired': 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบอีกครั้ง',
   'error.symbolTaken': 'มีหุ้นชื่อย่อนี้อยู่แล้ว',
   'error.functionMissing': 'ฟีเจอร์นี้ยังไม่ได้ติดตั้งบนเซิร์ฟเวอร์',
+  'error.serverConfig': 'เซิร์ฟเวอร์ตั้งค่าไม่ครบ',
+  'error.databaseUnavailable': 'อ่านข้อมูลไม่ได้ในตอนนี้ กรุณาลองใหม่อีกครั้ง',
 
   // --- form validation (codes come from @dcafolio/shared) -------------
   'validation.selectPurchaseDate': 'กรุณาเลือกวันที่ซื้อ',

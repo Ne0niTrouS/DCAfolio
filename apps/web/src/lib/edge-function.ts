@@ -39,11 +39,18 @@ export async function invokeEdgeFunction<T>(
 
   if (!error) return data as T;
 
-  const response = (error as { context?: Response }).context;
+  const context = (error as { context?: unknown }).context;
 
-  // No response at all means the request never landed — offline, or the
-  // project URL is wrong.
-  if (!response) throw new EdgeFunctionError('error.network');
+  // `context` is a Response only when the server actually answered. When the
+  // fetch itself fails — offline, wrong project URL, or a preflight the
+  // function did not answer — supabase-js puts the underlying error there
+  // instead. Testing it for truthiness alone treats that error as a response,
+  // reads no status and no body off it, and reports a connection failure as
+  // "something went wrong", which sends whoever hit it looking in the wrong
+  // place entirely.
+  if (!(context instanceof Response)) throw new EdgeFunctionError('error.network');
+
+  const response = context;
 
   // A function that was never deployed 404s, and its body is the platform's,
   // not ours. Saying "something went wrong" for that sends whoever hits it
@@ -51,5 +58,16 @@ export async function invokeEdgeFunction<T>(
   if (response.status === 404) throw new EdgeFunctionError('error.functionMissing');
 
   const payload: unknown = await response.json().catch(() => null);
-  throw new EdgeFunctionError(keyFrom((payload as { error?: unknown } | null)?.error));
+  const key = keyFrom((payload as { error?: unknown } | null)?.error);
+
+  // `error.generic` means the reason was not something this app knows how to
+  // say. Swallowing it entirely is what makes a failure unfixable: the user
+  // gets a sentence with no information and nobody else gets anything at all.
+  // The raw reason goes to the console — a developer can read it, and it never
+  // reaches the interface.
+  if (key === 'error.generic') {
+    console.error(`Edge Function "${name}" failed with ${response.status}:`, payload);
+  }
+
+  throw new EdgeFunctionError(key);
 }

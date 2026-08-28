@@ -164,22 +164,29 @@ describe('language across the signed-in application', () => {
     );
   });
 
-  it('switches every visible label, and keeps the choice while navigating', async () => {
-    renderApp();
-    await screen.findByRole('heading', { name: th['dashboard.title'] });
+  // Renders the whole signed-in app, switches language and navigates, so it sits
+  // near the 5s default on a busy machine and fails there for want of time
+  // rather than for anything being wrong.
+  it(
+    'switches every visible label, and keeps the choice while navigating',
+    { timeout: 20_000 },
+    async () => {
+      renderApp();
+      await screen.findByRole('heading', { name: th['dashboard.title'] });
 
-    await switchToEnglish();
+      await switchToEnglish();
 
-    expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
-    const [sidebar] = screen.getAllByRole('navigation', { name: 'Main' });
+      expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
+      const [sidebar] = screen.getAllByRole('navigation', { name: 'Main' });
 
-    await userEvent.click(within(sidebar!).getByRole('link', { name: 'History' }));
-    expect(await screen.findByRole('heading', { name: 'History' })).toBeInTheDocument();
+      await userEvent.click(within(sidebar!).getByRole('link', { name: 'History' }));
+      expect(await screen.findByRole('heading', { name: 'History' })).toBeInTheDocument();
 
-    await userEvent.click(within(sidebar!).getByRole('link', { name: 'Export' }));
-    expect(await screen.findByRole('heading', { name: 'Export Data' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: ENGLISH_BUTTON })).toBeInTheDocument();
-  });
+      await userEvent.click(within(sidebar!).getByRole('link', { name: 'Export' }));
+      expect(await screen.findByRole('heading', { name: 'Export Data' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: ENGLISH_BUTTON })).toBeInTheDocument();
+    },
+  );
 
   it('opens the Add Purchase modal in the application language', async () => {
     renderApp();

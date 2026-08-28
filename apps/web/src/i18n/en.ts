@@ -82,6 +82,8 @@ export const en = {
   'error.sessionExpired': 'Your session has expired. Sign in again.',
   'error.symbolTaken': 'That symbol is already in the list.',
   'error.functionMissing': 'This feature is not deployed on the server yet.',
+  'error.serverConfig': 'The server is missing part of its configuration.',
+  'error.databaseUnavailable': 'Could not read your data just now. Please try again.',
 
   // --- form validation (codes come from @dcafolio/shared) -------------
   'validation.selectPurchaseDate': 'Select a purchase date.',

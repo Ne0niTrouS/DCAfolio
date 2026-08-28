@@ -28,6 +28,24 @@ import {
   type Quote,
 } from '../_shared/yahoo.ts';
 
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
+
+/**
+ * Every reply carries CORS headers and a phrase key rather than a raw message.
+ *
+ * A Postgres error names tables and roles, and the person reading the dashboard
+ * can do nothing with it; it belongs in the function log. What reaches the app
+ * is a key it can translate — anything else arrives as "something went wrong",
+ * which tells nobody anything.
+ */
+function json(body: unknown, status: number): Response {
+  return Response.json(body, { status, headers: CORS_HEADERS });
+}
+
 type Batch = {
   quotes: Record<string, Quote | null>;
   marketState: MarketState;
@@ -144,7 +162,7 @@ function resolveProvider(id: string): MarketDataProvider {
   return mockProvider;
 }
 
-Deno.serve(async (request) => {
+async function handle(request: Request): Promise<Response> {
   // Secrets stay server-side. The service-role key bypasses RLS, which is why
   // it must never be exposed to a browser or placed in a VITE_ variable.
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -152,11 +170,11 @@ Deno.serve(async (request) => {
   const providerId = Deno.env.get('MARKET_DATA_PROVIDER') ?? 'mock';
 
   if (!supabaseUrl || !serviceRoleKey) {
-    return Response.json({ error: 'Function is not configured' }, { status: 500 });
+    return json({ error: 'error.serverConfig' }, 500);
   }
 
   if (request.method !== 'POST') {
-    return Response.json({ error: 'Method not allowed' }, { status: 405 });
+    return json({ error: 'error.generic' }, 405);
   }
 
   const supabase = createClient(supabaseUrl, serviceRoleKey);
@@ -168,7 +186,10 @@ Deno.serve(async (request) => {
     .select('stock_id, stocks ( id, symbol )');
 
   if (heldError) {
-    return Response.json({ error: heldError.message }, { status: 500 });
+    // The raw Postgres message goes to the function log, not to the browser: it
+    // names tables and roles, and the reader can do nothing with it anyway.
+    console.error('Reading held stocks failed:', heldError);
+    return json({ error: 'error.databaseUnavailable' }, 500);
   }
 
   const stocks = new Map<string, string>();
@@ -178,7 +199,7 @@ Deno.serve(async (request) => {
   }
 
   if (stocks.size === 0) {
-    return Response.json({ provider: providerId, captured: 0, stale: 0, marketState: 'unknown' });
+    return json({ provider: providerId, captured: 0, stale: 0, marketState: 'unknown' }, 200);
   }
 
   // Cooldown: the refresh button is one click, but a reload loop is no clicks
@@ -197,14 +218,17 @@ Deno.serve(async (request) => {
   );
 
   if (waitMinutes > 0) {
-    return Response.json({
-      provider: providerId,
-      captured: 0,
-      stale: 0,
-      skipped: true,
-      retryInMinutes: waitMinutes,
-      cooldownMinutes: SYNC_COOLDOWN_MINUTES,
-    });
+    return json(
+      {
+        provider: providerId,
+        captured: 0,
+        stale: 0,
+        skipped: true,
+        retryInMinutes: waitMinutes,
+        cooldownMinutes: SYNC_COOLDOWN_MINUTES,
+      },
+      200,
+    );
   }
 
   const provider = resolveProvider(providerId);
@@ -273,16 +297,40 @@ Deno.serve(async (request) => {
   if (rows.length > 0) {
     const { error: insertError } = await supabase.from('market_prices').insert(rows);
     if (insertError) {
-      return Response.json({ error: insertError.message }, { status: 500 });
+      console.error('Writing the price cache failed:', insertError);
+      return json({ error: 'error.databaseUnavailable' }, 500);
     }
   }
 
-  return Response.json({
-    provider: providerId,
-    captured: rows.length - stale.length,
-    stale: stale.length,
-    marketState: batch.marketState,
-    providerFailed,
-    cooldownMinutes: SYNC_COOLDOWN_MINUTES,
-  });
+  return json(
+    {
+      provider: providerId,
+      captured: rows.length - stale.length,
+      stale: stale.length,
+      marketState: batch.marketState,
+      providerFailed,
+      cooldownMinutes: SYNC_COOLDOWN_MINUTES,
+    },
+    200,
+  );
+}
+
+Deno.serve(async (request) => {
+  // The browser sends a preflight before this POST, because the call carries an
+  // Authorization header and a JSON content type. Answering it is not optional:
+  // without these headers the browser discards the real response and the app
+  // never learns why.
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: CORS_HEADERS });
+  }
+
+  try {
+    return await handle(request);
+  } catch (error) {
+    // An unhandled throw would otherwise return a bare 500 with a plain-text
+    // body and no CORS headers — unreadable to the app, which could then only
+    // say "something went wrong" about a failure nobody can see.
+    console.error('Unhandled failure in market-data:', error);
+    return json({ error: 'error.generic' }, 500);
+  }
 });
